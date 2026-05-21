@@ -14,143 +14,139 @@
   --radius:10px; --font-head:'Playfair Display',serif; --font-body:'Source Sans 3',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh}
 
 /* HEADER */
-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
-.logo{font-family:var(--font-head);font-size:1.3rem;color:var(--accent);display:flex;align-items:center;gap:7px}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--font-head);font-size:1.2rem;color:var(--accent);display:flex;align-items:center;gap:6px}
 .logo span{color:var(--text)}
-.ticker-bar{display:flex;gap:14px;font-size:0.73rem;font-weight:500}
-.ti{display:flex;align-items:center;gap:4px}
-.ti .n{color:var(--text2)} .ti .v{color:var(--text)}
-.ti .c.up{color:var(--green)} .ti .c.dn{color:var(--red)}
-.hbtns{display:flex;gap:8px;align-items:center}
+.hbtns{display:flex;gap:7px;align-items:center}
 .hbtn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:var(--font-body);font-size:0.78rem;font-weight:600;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px;transition:all .2s}
 .hbtn:hover{border-color:var(--accent);color:var(--accent)}
 .hbtn.primary{background:var(--accent);color:#000;border-color:var(--accent)}
 .hbtn.primary:hover{background:var(--accent2)}
-.hbtn.spinning svg{animation:spin 1s linear infinite}
+.hbtn:disabled{opacity:.5;cursor:not-allowed}
+.hbtn.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* LAYOUT */
-.layout{display:grid;grid-template-columns:210px 1fr 250px;min-height:calc(100vh - 56px)}
-
-/* SIDEBAR */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:16px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
-.sidebar::-webkit-scrollbar{width:3px} .sidebar::-webkit-scrollbar-thumb{background:var(--border)}
-.stitle{font-size:0.62rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);padding:0 16px 8px}
-.qf{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:0.81rem;color:var(--text2);border-left:3px solid transparent;transition:all .15s}
-.qf:hover{background:var(--bg3);color:var(--text)}
-.qf.active{background:var(--bg3);border-left-color:var(--accent);color:var(--accent)}
-.ssep{height:1px;background:var(--border);margin:10px 16px}
-.src-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;font-size:0.8rem;border-left:3px solid transparent;transition:all .15s}
-.src-item:hover{background:var(--bg3)}
-.src-item.active{background:var(--bg3);border-left-color:var(--accent);color:var(--accent)}
-.src-item .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.src-item .cnt{margin-left:auto;background:var(--bg3);border-radius:8px;padding:1px 6px;font-size:0.68rem;color:var(--text3)}
-.src-item.active .cnt{background:var(--accent);color:#000}
-
 /* FEED */
-.feed{padding:18px 22px;overflow-y:auto;height:calc(100vh - 56px)}
-.feed::-webkit-scrollbar{width:3px} .feed::-webkit-scrollbar-thumb{background:var(--border)}
-.feed-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.feed-hdr h2{font-family:var(--font-head);font-size:1.1rem}
-.feed-meta{font-size:0.72rem;color:var(--text3);display:flex;gap:12px}
-.srch{position:relative;margin-bottom:14px}
+.feed{padding:16px;max-width:800px;margin:0 auto}
+.feed-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.feed-hdr h2{font-family:var(--font-head);font-size:1.05rem}
+.feed-meta{font-size:0.7rem;color:var(--text3)}
+.srch{position:relative;margin-bottom:12px}
 .srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3)}
 #srch-inp{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 34px;color:var(--text);font-family:var(--font-body);font-size:0.83rem;outline:none;transition:border-color .2s}
 #srch-inp:focus{border-color:var(--accent)}
 #srch-inp::placeholder{color:var(--text3)}
 
+/* FILTROS */
+.filters{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.filters::-webkit-scrollbar{height:2px}
+.fchip{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:0.75rem;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all .15s}
+.fchip:hover{border-color:var(--accent);color:var(--accent)}
+.fchip.active{background:var(--accent);color:#000;border-color:var(--accent)}
+
+/* FUENTES ACTIVAS */
+.src-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.src-chip{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:0.72rem;cursor:pointer;transition:all .15s}
+.src-chip:hover{border-color:var(--red)}
+.src-chip .dot{width:6px;height:6px;border-radius:50%}
+.src-chip .x{color:var(--text3);margin-left:2px;font-size:0.85rem}
+.src-chip:hover .x{color:var(--red)}
+.add-src-chip{background:var(--bg3);border:1px dashed var(--border);border-radius:20px;padding:4px 10px;font-size:0.72rem;cursor:pointer;color:var(--text3);transition:all .15s;display:flex;align-items:center;gap:4px}
+.add-src-chip:hover{border-color:var(--accent);color:var(--accent)}
+
 /* CARD */
-.card{display:flex;gap:13px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;transition:border-color .2s,transform .15s,box-shadow .2s;animation:fadeUp .3s ease forwards;opacity:0;position:relative}
-@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-.card:hover{border-color:var(--accent);transform:translateX(2px);box-shadow:-3px 0 0 var(--accent),0 4px 18px rgba(0,0,0,.3)}
-.thumb{width:88px;height:66px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--bg3)}
-.thumb-ph{width:88px;height:66px;border-radius:7px;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.card{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;transition:border-color .2s,transform .15s,box-shadow .2s;animation:fadeUp .3s ease forwards;opacity:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card:hover{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent),0 3px 14px rgba(0,0,0,.3)}
+.thumb{width:80px;height:60px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--bg3)}
+.thumb-ph{width:80px;height:60px;border-radius:6px;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 .cbody{flex:1;min-width:0}
-.src-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.67rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.src-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.65rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
 .src-badge .dot{width:4px;height:4px;border-radius:50%}
-.ctitle{font-size:0.86rem;font-weight:600;line-height:1.35;color:var(--text);margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-decoration:none;cursor:pointer}
+.ctitle{font-size:0.84rem;font-weight:600;line-height:1.35;color:var(--text);margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-decoration:none}
 .ctitle:hover{color:var(--accent)}
-.cdesc{font-size:0.75rem;color:var(--text2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}
-.cfooter{display:flex;align-items:center;gap:8px}
-.ctime{font-size:0.68rem;color:var(--text3);display:flex;align-items:center;gap:3px}
-.cactions{display:flex;gap:5px;margin-left:auto;align-items:center}
-.abtn{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);font-size:0.69rem;font-family:var(--font-body);display:flex;align-items:center;gap:3px;transition:all .15s;text-decoration:none;white-space:nowrap}
+.cdesc{font-size:0.73rem;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.cfooter{display:flex;align-items:center;gap:6px}
+.ctime{font-size:0.67rem;color:var(--text3)}
+.cactions{display:flex;gap:4px;margin-left:auto}
+.abtn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;color:var(--text2);font-size:0.67rem;font-family:var(--font-body);display:flex;align-items:center;gap:3px;transition:all .15s;text-decoration:none;white-space:nowrap}
 .abtn:hover{background:var(--accent);color:#000;border-color:var(--accent)}
 .abtn.saved{color:var(--accent);border-color:var(--accent)}
 
 /* SHARE */
 .sw{position:relative}
-.smenu{position:absolute;bottom:calc(100% + 5px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:160px;z-index:60;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.smenu{position:absolute;bottom:calc(100% + 4px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px;min-width:155px;z-index:60;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .smenu.open{display:block;animation:fadeUp .15s ease}
-.sopt{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:6px;cursor:pointer;font-size:0.76rem;color:var(--text2);transition:all .15s;text-decoration:none}
+.sopt{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:5px;cursor:pointer;font-size:0.75rem;color:var(--text2);transition:all .15s;text-decoration:none}
 .sopt:hover{background:var(--bg3);color:var(--text)}
 
-/* STATES */
-.loading,.empty,.errst{text-align:center;padding:50px 20px;color:var(--text3)}
-.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
-.err-src{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:0.78rem;display:flex;align-items:center;justify-content:space-between}
-.err-src .err-name{color:var(--text2)} .err-src .err-msg{color:var(--red);font-size:0.7rem}
+/* ESTADOS */
+.loading,.empty{text-align:center;padding:50px 20px;color:var(--text3)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 
-/* PANEL */
-.panel{background:var(--bg2);border-left:1px solid var(--border);padding:18px 16px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
-.panel::-webkit-scrollbar{width:3px} .panel::-webkit-scrollbar-thumb{background:var(--border)}
-.psec{margin-bottom:22px}
-.ptitle{font-size:0.62rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-.saved-it{padding:9px 0;border-bottom:1px solid var(--border);font-size:0.76rem;line-height:1.4;cursor:pointer;color:var(--text2);transition:color .15s}
-.saved-it:hover{color:var(--text)}
-.saved-it .ss{font-size:0.63rem;color:var(--accent);margin-bottom:2px}
-.stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.76rem}
-.stat .lbl{color:var(--text2)} .stat .val{font-weight:600}
-.stog{font-size:0.73rem;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.tog{width:28px;height:15px;background:var(--bg3);border-radius:8px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.tog.on{background:var(--accent)}
-.tog::after{content:'';position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s}
-.tog.on::after{transform:translateX(13px)}
-
-/* MODAL AÑADIR FUENTE */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:460px;max-width:95vw;animation:fadeUp .2s ease}
-.modal h3{font-family:var(--font-head);font-size:1.2rem;margin-bottom:6px}
-.modal p{font-size:0.8rem;color:var(--text2);margin-bottom:20px;line-height:1.5}
-.mfield{margin-bottom:14px}
-.mfield label{display:block;font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.3px}
-.mfield input,.mfield select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:0.85rem;outline:none;transition:border-color .2s}
-.mfield input:focus,.mfield select:focus{border-color:var(--accent)}
-.mfield input::placeholder{color:var(--text3)}
-.mrow{display:flex;gap:12px}
-.mrow .mfield{flex:1}
-.mbts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-.mbtn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 18px;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all .2s}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px 14px 0 0;padding:24px 20px 32px;width:100%;max-width:500px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal h3{font-family:var(--font-head);font-size:1.1rem;margin-bottom:6px}
+.modal .sub{font-size:0.78rem;color:var(--text2);margin-bottom:18px;line-height:1.5}
+
+/* Buscador de fuentes */
+.src-search{position:relative;margin-bottom:12px}
+.src-search input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px 10px 38px;color:var(--text);font-family:var(--font-body);font-size:0.88rem;outline:none;transition:border-color .2s}
+.src-search input:focus{border-color:var(--accent)}
+.src-search input::placeholder{color:var(--text3)}
+.src-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.src-search .searching{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+.src-search .searching .mini-spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+
+/* Resultados búsqueda */
+.src-results{background:var(--bg3);border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;margin-bottom:12px;display:none}
+.src-results.show{display:block}
+.src-result-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
+.src-result-item:last-child{border-bottom:none}
+.src-result-item:hover{background:var(--bg2)}
+.sri-top{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.sri-emoji{font-size:1.1rem}
+.sri-name{font-size:0.85rem;font-weight:600;color:var(--text)}
+.sri-url{font-size:0.68rem;color:var(--text3);word-break:break-all}
+.sri-badge{margin-left:auto;font-size:0.65rem;background:var(--accent);color:#000;padding:2px 6px;border-radius:10px;font-weight:700}
+
+.src-msg{font-size:0.75rem;padding:10px;text-align:center;color:var(--text3)}
+.src-msg.err{color:var(--red)}
+.src-msg.ok{color:var(--green)}
+
+/* URL manual */
+.manual-toggle{font-size:0.75rem;color:var(--text3);cursor:pointer;text-align:center;margin-bottom:10px;text-decoration:underline}
+.manual-toggle:hover{color:var(--text2)}
+.manual-section{display:none;margin-bottom:12px}
+.manual-section.show{display:block}
+.mfield label{display:block;font-size:0.73rem;font-weight:600;color:var(--text2);margin-bottom:4px}
+.mfield input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:0.83rem;outline:none;transition:border-color .2s;margin-bottom:10px}
+.mfield input:focus{border-color:var(--accent)}
+.mbts{display:flex;gap:8px}
+.mbtn{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all .2s}
 .mbtn:hover{border-color:var(--text2);color:var(--text)}
 .mbtn.ok{background:var(--accent);color:#000;border-color:var(--accent)}
 .mbtn.ok:hover{background:var(--accent2)}
-.mstatus{font-size:0.75rem;margin-top:10px;padding:8px 12px;border-radius:7px;display:none}
-.mstatus.ok{background:#1a3a2a;color:var(--green);display:block}
-.mstatus.err{background:#3a1a1a;color:var(--red);display:block}
+.mbtn:disabled{opacity:.4;cursor:not-allowed}
 
 /* TOAST */
-.toast{position:fixed;bottom:22px;right:22px;background:var(--accent);color:#000;padding:9px 16px;border-radius:8px;font-size:0.8rem;font-weight:700;z-index:999;transform:translateY(70px);opacity:0;transition:all .3s;pointer-events:none}
-.toast.show{transform:translateY(0);opacity:1}
-
-@media(max-width:860px){.layout{grid-template-columns:1fr}.sidebar,.panel{display:none}.ticker-bar{display:none}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;font-size:0.8rem;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">📈 <span>Market</span>Pulse</div>
-  <div class="ticker-bar" id="ticker">
-    <div class="ti"><span class="n">IBEX35</span><span class="v" id="t1">—</span><span class="c up" id="t1c">—</span></div>
-    <div class="ti"><span class="n">EUR/USD</span><span class="v" id="t2">—</span><span class="c" id="t2c">—</span></div>
-    <div class="ti"><span class="n">S&amp;P500</span><span class="v" id="t3">—</span><span class="c up" id="t3c">—</span></div>
-    <div class="ti"><span class="n">ORO</span><span class="v" id="t4">—</span><span class="c up" id="t4c">—</span></div>
-  </div>
   <div class="hbtns">
-    <button class="hbtn" onclick="openAddSource()">➕ Añadir fuente</button>
+    <button class="hbtn" onclick="openModal()">➕ Añadir fuente</button>
     <button class="hbtn primary" id="btn-ref" onclick="loadAll()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Actualizar
@@ -158,92 +154,71 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
   </div>
 </header>
 
-<div class="layout">
-  <aside class="sidebar">
-    <div class="stitle">Filtros</div>
-    <div class="qf active" onclick="setTag('all',this)"><span>📰</span>Todas</div>
-    <div class="qf" onclick="setTag('bolsa',this)"><span>📊</span>Bolsa y mercados</div>
-    <div class="qf" onclick="setTag('macro',this)"><span>🏦</span>Macroeconomía</div>
-    <div class="qf" onclick="setTag('empresa',this)"><span>🏢</span>Empresas</div>
-    <div class="qf" onclick="setTag('saved',this)"><span>🔖</span>Guardadas</div>
-    <div class="ssep"></div>
-    <div class="stitle">Fuentes</div>
-    <div id="src-list"></div>
-  </aside>
+<div class="feed">
+  <div class="feed-hdr">
+    <h2 id="feed-title">Todas las noticias</h2>
+    <div class="feed-meta"><span id="n-count">0 noticias</span></div>
+  </div>
 
-  <main class="feed">
-    <div class="feed-hdr">
-      <h2 id="feed-title">Todas las noticias</h2>
-      <div class="feed-meta">
-        <span id="n-count">—</span>
-        <span id="n-upd">—</span>
-      </div>
-    </div>
-    <div class="srch">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="srch-inp" placeholder="Buscar en las noticias..." oninput="doSearch(this.value)">
-    </div>
-    <div id="feed-body"></div>
-  </main>
+  <!-- Chips de fuentes activas -->
+  <div class="src-chips" id="src-chips">
+    <div class="add-src-chip" onclick="openModal()">➕ Añadir fuente</div>
+  </div>
 
-  <aside class="panel">
-    <div class="psec">
-      <div class="ptitle">🔖 Guardadas</div>
-      <div id="saved-panel"><p style="font-size:.74rem;color:var(--text3)">Usa 📌 para guardar noticias</p></div>
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="fchip active" onclick="setFilter('all',this)">📰 Todas</div>
+    <div class="fchip" onclick="setFilter('bolsa',this)">📊 Bolsa</div>
+    <div class="fchip" onclick="setFilter('macro',this)">🏦 Macro</div>
+    <div class="fchip" onclick="setFilter('empresa',this)">🏢 Empresas</div>
+    <div class="fchip" onclick="setFilter('saved',this)">🔖 Guardadas</div>
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="srch">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="srch-inp" placeholder="Buscar noticias..." oninput="doSearch(this.value)">
+  </div>
+
+  <div id="feed-body">
+    <div class="empty">
+      <p style="font-size:2.5rem;margin-bottom:12px">📰</p>
+      <p style="font-size:.9rem;margin-bottom:6px">No hay fuentes configuradas</p>
+      <p style="font-size:.78rem">Pulsa <strong style="color:var(--accent)">➕ Añadir fuente</strong> para empezar</p>
     </div>
-    <div class="psec">
-      <div class="ptitle">📊 Estadísticas</div>
-      <div class="stat"><span class="lbl">Noticias cargadas</span><span class="val" id="s-total">0</span></div>
-      <div class="stat"><span class="lbl">Fuentes activas</span><span class="val" id="s-srcs">0</span></div>
-      <div class="stat"><span class="lbl">Errores de carga</span><span class="val" id="s-errs" style="color:var(--red)">0</span></div>
-      <div class="stat"><span class="lbl">Actualizado</span><span class="val" id="s-upd">—</span></div>
-    </div>
-    <div class="psec">
-      <div class="ptitle">⚙️ Activar fuentes</div>
-      <div id="src-togs"></div>
-    </div>
-  </aside>
+  </div>
 </div>
 
 <!-- MODAL AÑADIR FUENTE -->
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h3>➕ Añadir nueva fuente</h3>
-    <p>Introduce la URL del feed RSS y personaliza cómo aparecerá en la app. Puedes verificar el RSS antes de añadirlo.</p>
-    <div class="mfield">
-      <label>URL del feed RSS *</label>
-      <input type="url" id="m-url" placeholder="https://ejemplo.com/rss.xml">
+    <div class="modal-handle"></div>
+    <h3>Añadir fuente de noticias</h3>
+    <p class="sub">Escribe el nombre del medio y te buscaremos su RSS automáticamente. También puedes introducir la URL directamente.</p>
+
+    <div class="src-search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="src-query" placeholder="Bloomberg, Expansión, Reuters..." oninput="onQueryInput(this.value)" autocomplete="off">
+      <div class="searching" id="searching" style="display:none"><div class="mini-spin"></div></div>
     </div>
-    <div class="mrow">
+
+    <div id="src-results" class="src-results"></div>
+
+    <div class="manual-toggle" onclick="toggleManual()">✏️ Introducir URL RSS manualmente</div>
+    <div class="manual-section" id="manual-sec">
       <div class="mfield">
-        <label>Nombre de la fuente *</label>
-        <input type="text" id="m-name" placeholder="El Economista">
+        <label>URL del RSS</label>
+        <input type="url" id="m-url" placeholder="https://ejemplo.com/feed.xml">
+        <label>Nombre</label>
+        <input type="text" id="m-name" placeholder="Nombre del medio">
       </div>
-      <div class="mfield">
-        <label>Emoji icono</label>
-        <input type="text" id="m-emoji" placeholder="📰" maxlength="4" style="text-align:center;font-size:1.2rem">
-      </div>
-    </div>
-    <div class="mrow">
-      <div class="mfield">
-        <label>Color identificador</label>
-        <input type="color" id="m-color" value="#d4a843" style="height:40px;cursor:pointer">
-      </div>
-      <div class="mfield">
-        <label>Categoría</label>
-        <select id="m-tag">
-          <option value="bolsa,macro,empresa">Todas las categorías</option>
-          <option value="bolsa">Bolsa y mercados</option>
-          <option value="macro">Macroeconomía</option>
-          <option value="empresa">Empresas</option>
-        </select>
+      <div class="mbts" style="margin-bottom:12px">
+        <button class="mbtn" onclick="addManual()">Añadir manualmente</button>
       </div>
     </div>
-    <div id="m-status" class="mstatus"></div>
+
     <div class="mbts">
-      <button class="mbtn" onclick="testFeed()">🔍 Verificar RSS</button>
       <button class="mbtn" onclick="closeModal()">Cancelar</button>
-      <button class="mbtn ok" onclick="addSource()">Añadir fuente</button>
     </div>
   </div>
 </div>
@@ -251,250 +226,259 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-// PROXIES CORS — se prueban en orden hasta que uno funcione
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// BASE DE DATOS DE FEEDS CONOCIDOS
+// Se usa para búsqueda local instantánea sin API
+// ══════════════════════════════════════════════════════
+const KNOWN_FEEDS = [
+  // España
+  {name:'El Economista',      emoji:'📰', color:'#e05a5a', tags:['bolsa','macro','empresa'],
+   url:'https://www.eleconomista.es/rss/rss.php'},
+  {name:'Expansión Mercados', emoji:'💼', color:'#d4a843', tags:['bolsa','empresa'],
+   url:'https://e00-expansion.uecdn.es/rss/mercados.xml'},
+  {name:'Expansión Economía', emoji:'💼', color:'#d4a843', tags:['macro','empresa'],
+   url:'https://e00-expansion.uecdn.es/rss/economia.xml'},
+  {name:'Cinco Días',         emoji:'📊', color:'#4a9edd', tags:['macro','empresa'],
+   url:'https://feeds.elpais.com/mrss-s/pages/ep/site/cincodias.elpais.com/portada'},
+  {name:'Invertia',           emoji:'🔍', color:'#a855f7', tags:['bolsa','empresa'],
+   url:'https://www.invertia.com/es/rss/ultimas-noticias.xml'},
+  {name:'El País Economía',   emoji:'🗞️', color:'#6366f1', tags:['macro','empresa'],
+   url:'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada'},
+  {name:'El Confidencial Mercados', emoji:'🔵', color:'#3b82f6', tags:['bolsa','macro'],
+   url:'https://rss.elconfidencial.com/mercados'},
+  {name:'Bolsamanía',         emoji:'📈', color:'#22c55e', tags:['bolsa'],
+   url:'https://www.bolsamania.com/noticias/rss/todas-noticas--1.xml'},
+  // Internacional
+  {name:'Reuters Business',   emoji:'📡', color:'#fb923c', tags:['macro','empresa'],
+   url:'https://feeds.reuters.com/reuters/businessNews'},
+  {name:'Reuters Markets',    emoji:'📡', color:'#fb923c', tags:['bolsa','macro'],
+   url:'https://feeds.reuters.com/reuters/marketsNews'},
+  {name:'Bloomberg Markets',  emoji:'🌐', color:'#f97316', tags:['macro','bolsa'],
+   url:'https://feeds.bloomberg.com/markets/news.rss'},
+  {name:'Bloomberg Technology',emoji:'🌐',color:'#f97316', tags:['empresa'],
+   url:'https://feeds.bloomberg.com/technology/news.rss'},
+  {name:'Financial Times',    emoji:'🗞️', color:'#e8c96a', tags:['macro','empresa'],
+   url:'https://www.ft.com/rss/home'},
+  {name:'MarketWatch',        emoji:'⚡', color:'#a3e635', tags:['bolsa','macro'],
+   url:'https://feeds.marketwatch.com/marketwatch/topstories/'},
+  {name:'Seeking Alpha',      emoji:'🔎', color:'#67e8f9', tags:['bolsa','empresa'],
+   url:'https://seekingalpha.com/market_currents.xml'},
+  {name:'CNBC Markets',       emoji:'📺', color:'#0ea5e9', tags:['bolsa','macro'],
+   url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664'},
+  {name:'Yahoo Finance',      emoji:'💹', color:'#6d28d9', tags:['bolsa','macro'],
+   url:'https://finance.yahoo.com/rss/topstories'},
+  {name:'Investing.com',      emoji:'📈', color:'#34c98a', tags:['bolsa','macro'],
+   url:'https://es.investing.com/rss/news.rss'},
+  {name:'The Economist',      emoji:'🎩', color:'#dc2626', tags:['macro'],
+   url:'https://www.economist.com/finance-and-economics/rss.xml'},
+  {name:'WSJ Markets',        emoji:'📓', color:'#b45309', tags:['bolsa','macro'],
+   url:'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
+  {name:'Morningstar',        emoji:'⭐', color:'#f59e0b', tags:['bolsa','empresa'],
+   url:'https://www.morningstar.com/feeds/articles'},
+  {name:'Barron\'s',          emoji:'📊', color:'#7c3aed', tags:['bolsa'],
+   url:'https://www.barrons.com/xml/rss/3_7531.xml'},
+];
+
+// ══════════════════════════════════════════════════════
+// PROXIES CORS
+// ══════════════════════════════════════════════════════
 const PROXIES = [
-  url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=30`,
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+  u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}&count=30`,
+  u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
 ];
 
-// ══════════════════════════════════════════════
-// FUENTES POR DEFECTO
-// ══════════════════════════════════════════════
-const DEFAULT_SOURCES = [
-  {id:'eleconomista', name:'El Economista', color:'#e05a5a', emoji:'📰', url:'https://www.eleconomista.es/rss/rss.php', tags:['bolsa','macro','empresa']},
-  {id:'expansion',    name:'Expansión',     color:'#d4a843', emoji:'💼', url:'https://e00-expansion.uecdn.es/rss/mercados.xml', tags:['bolsa','empresa']},
-  {id:'cincodias',    name:'Cinco Días',    color:'#4a9edd', emoji:'📊', url:'https://feeds.elpais.com/mrss-s/pages/ep/site/cincodias.elpais.com/portada', tags:['macro','empresa']},
-  {id:'investing',    name:'Investing.com', color:'#34c98a', emoji:'📈', url:'https://es.investing.com/rss/news.rss', tags:['bolsa','macro']},
-  {id:'bloomberg',    name:'Bloomberg',     color:'#f97316', emoji:'🌐', url:'https://feeds.bloomberg.com/markets/news.rss', tags:['macro','bolsa']},
-  {id:'ft',           name:'Financial Times',color:'#e8c96a',emoji:'🗞️', url:'https://www.ft.com/rss/home', tags:['macro','empresa']},
-  {id:'reuters',      name:'Reuters',       color:'#fb923c', emoji:'📡', url:'https://feeds.reuters.com/reuters/businessNews', tags:['macro','empresa']},
-  {id:'marketwatch',  name:'MarketWatch',   color:'#a3e635', emoji:'⚡', url:'https://feeds.marketwatch.com/marketwatch/topstories/', tags:['bolsa','macro']},
-  {id:'seekingalpha', name:'Seeking Alpha', color:'#67e8f9', emoji:'🔎', url:'https://seekingalpha.com/market_currents.xml', tags:['bolsa','empresa']},
-  {id:'invertia',     name:'Invertia',      color:'#a855f7', emoji:'🔍', url:'https://www.invertia.com/es/rss/ultimas-noticias.xml', tags:['bolsa','empresa']},
-];
-
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // ESTADO
-// ══════════════════════════════════════════════
-let SOURCES   = JSON.parse(localStorage.getItem('mp_sources') || 'null') || DEFAULT_SOURCES;
-let enabled   = JSON.parse(localStorage.getItem('mp_enabled') || 'null') || Object.fromEntries(SOURCES.map(s=>[s.id,true]));
-let saved     = JSON.parse(localStorage.getItem('mp_saved')   || '[]');
-let allNews   = [];
-let filtered  = [];
-let activeTag = 'all';
-let activeSrc = 'all';
-let srchQ     = '';
-let errCount  = 0;
-const MAX     = 150;
+// ══════════════════════════════════════════════════════
+let SOURCES  = JSON.parse(localStorage.getItem('mp_sources2') || '[]');
+let saved    = JSON.parse(localStorage.getItem('mp_saved2')   || '[]');
+let allNews  = [];
+let filtered = [];
+let activeFilter = 'all';
+let activeSrc    = 'all';
+let srchQ        = '';
+const MAX        = 150;
+let searchTimer  = null;
+let pendingAdd   = null; // fuente seleccionada para añadir
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  buildSidebar(); buildToggles(); renderSaved();
-  loadAll(); updateTicker();
-  setInterval(updateTicker,90000);
-  document.addEventListener('click',e=>{
-    if(!e.target.closest('.sw')) document.querySelectorAll('.smenu.open').forEach(m=>m.classList.remove('open'));
+// ══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderSourceChips();
+  if (SOURCES.length > 0) loadAll();
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.sw'))
+      document.querySelectorAll('.smenu.open').forEach(m => m.classList.remove('open'));
   });
 });
 
-// ══════════════════════════════════════════════
-// CARGA DE FEEDS CON FALLBACK DE PROXIES
-// ══════════════════════════════════════════════
-async function loadAll(){
-  const btn=document.getElementById('btn-ref');
-  btn.classList.add('spinning');
-  errCount=0;
-  document.getElementById('feed-body').innerHTML=`<div class="loading"><div class="spinner"></div><p>Cargando noticias...</p></div>`;
+// ══════════════════════════════════════════════════════
+// CARGA DE FEEDS
+// ══════════════════════════════════════════════════════
+async function loadAll() {
+  if (!SOURCES.length) return;
+  const btn = document.getElementById('btn-ref');
+  btn.classList.add('spin');
+  btn.disabled = true;
+  document.getElementById('feed-body').innerHTML = `<div class="loading"><div class="spinner"></div><p>Cargando noticias...</p></div>`;
 
-  const active=SOURCES.filter(s=>enabled[s.id]!==false);
-  document.getElementById('s-srcs').textContent=active.length;
+  const results = await Promise.allSettled(SOURCES.map(s => fetchWithFallback(s)));
+  allNews = [];
+  results.forEach(r => { if (r.status === 'fulfilled') allNews.push(...r.value); });
+  allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
+  allNews = allNews.slice(0, MAX);
 
-  const results=await Promise.allSettled(active.map(s=>fetchWithFallback(s)));
-  allNews=[];
-  results.forEach(r=>{ if(r.status==='fulfilled') allNews.push(...r.value); });
-  allNews.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  allNews=allNews.slice(0,MAX);
-
-  const now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('n-upd').textContent=`Actualizado: ${now}`;
-  document.getElementById('s-upd').textContent=now;
-  document.getElementById('s-total').textContent=allNews.length;
-  document.getElementById('s-errs').textContent=errCount;
-
-  buildSidebar(); applyFilters();
-  btn.classList.remove('spinning');
-  if(allNews.length) toast(`✓ ${allNews.length} noticias cargadas`);
-  else toast('⚠ No se pudieron cargar noticias. Revisa tu conexión.');
+  applyFilters();
+  btn.classList.remove('spin');
+  btn.disabled = false;
+  const ok = results.filter(r => r.status === 'fulfilled' && r.value.length > 0).length;
+  toast(`✓ ${allNews.length} noticias de ${ok} fuentes`);
 }
 
-async function fetchWithFallback(source){
-  // Intentar cada proxy en orden
-  for(let i=0;i<PROXIES.length;i++){
-    try{
-      const result=await fetchWithProxy(source, PROXIES[i]);
-      if(result && result.length>0) return result;
-    }catch(e){ /* probar siguiente */ }
+async function fetchWithFallback(source) {
+  for (const proxyFn of PROXIES) {
+    try {
+      const items = await fetchWithProxy(source, proxyFn);
+      if (items && items.length > 0) return items;
+    } catch (e) { /* siguiente proxy */ }
   }
-  errCount++;
-  console.warn('No se pudo cargar:',source.name);
+  console.warn('No se pudo cargar:', source.name);
   return [];
 }
 
-async function fetchWithProxy(source, proxyFn){
-  const proxyUrl=proxyFn(source.url);
-  const resp=await fetch(proxyUrl,{signal:AbortSignal.timeout(8000)});
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
-  const text=await resp.text();
+async function fetchWithProxy(source, proxyFn) {
+  const proxyUrl = proxyFn(source.url);
+  const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const text = await resp.text();
 
-  // rss2json devuelve JSON
-  if(proxyUrl.includes('rss2json')){
-    const data=JSON.parse(text);
-    if(data.status!=='ok'||!data.items?.length) throw new Error('rss2json error');
-    return data.items.map(item=>normalizeItem(item,source,'rss2json'));
+  if (proxyUrl.includes('rss2json')) {
+    const data = JSON.parse(text);
+    if (data.status !== 'ok' || !data.items?.length) throw new Error('empty');
+    return data.items.map(item => norm(item, source, 'json'));
   }
 
-  // allorigins devuelve {contents: "xml..."}
-  let xmlText=text;
-  if(proxyUrl.includes('allorigins')){
-    const j=JSON.parse(text);
-    xmlText=j.contents||'';
+  let xml = text;
+  if (proxyUrl.includes('allorigins')) {
+    const j = JSON.parse(text);
+    xml = j.contents || '';
   }
-
-  // Parsear XML directamente
-  return parseXML(xmlText,source);
+  return parseXML(xml, source);
 }
 
-function parseXML(xmlText,source){
-  try{
-    const parser=new DOMParser();
-    const doc=parser.parseFromString(xmlText,'text/xml');
-    const items=Array.from(doc.querySelectorAll('item'));
-    if(!items.length) throw new Error('sin items');
-    return items.map(item=>{
-      const get=tag=>item.querySelector(tag)?.textContent?.trim()||'';
-      const getAttr=(tag,attr)=>item.querySelector(tag)?.getAttribute(attr)||'';
-      const enclosure=getAttr('enclosure','url')||getAttr('media\\:content','url')||getAttr('media:content','url');
-      const desc=get('description')||get('content:encoded')||'';
-      return {
-        id:   btoa(encodeURIComponent(get('link')||Math.random()+'')).slice(0,14),
-        title: get('title').replace(/<!\[CDATA\[|\]\]>/g,''),
-        desc:  stripHtml(desc).slice(0,200),
-        link:  get('link')||get('guid')||'#',
-        thumb: enclosure||extractImg(desc)||null,
-        date:  get('pubDate')||new Date().toISOString(),
-        source: source.name, sourceId:source.id,
-        sourceColor:source.color, sourceEmoji:source.emoji,
-        tags: source.tags,
-      };
-    });
-  }catch(e){ throw new Error('XML parse error: '+e.message); }
+function parseXML(xmlText, source) {
+  const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+  const items = Array.from(doc.querySelectorAll('item'));
+  if (!items.length) throw new Error('no items');
+  return items.map(item => {
+    const g = tag => item.querySelector(tag)?.textContent?.trim() || '';
+    const ga = (tag, attr) => item.querySelector(tag)?.getAttribute(attr) || '';
+    const enc = ga('enclosure', 'url') || ga('media\\:content', 'url') || ga('media:content', 'url');
+    const desc = g('description') || g('content:encoded') || '';
+    return {
+      id: btoa(encodeURIComponent(g('link') + g('title'))).slice(0, 16),
+      title: g('title').replace(/<!\[CDATA\[|\]\]>/g, ''),
+      desc: stripHtml(desc).slice(0, 180),
+      link: g('link') || g('guid') || '#',
+      thumb: enc || extractImg(desc) || null,
+      date: g('pubDate') || new Date().toISOString(),
+      source: source.name, sourceId: source.id,
+      sourceColor: source.color, sourceEmoji: source.emoji,
+      tags: source.tags,
+    };
+  });
 }
 
-function normalizeItem(item,source,_type){
+function norm(item, source) {
   return {
-    id:    btoa(encodeURIComponent(item.link||Math.random()+'')).slice(0,14),
-    title: item.title||'',
-    desc:  stripHtml(item.description||item.content||'').slice(0,200),
-    link:  item.link||'#',
-    thumb: item.thumbnail||item.enclosure?.link||extractImg(item.description||'')||null,
-    date:  item.pubDate||new Date().toISOString(),
-    source:source.name, sourceId:source.id,
-    sourceColor:source.color, sourceEmoji:source.emoji,
-    tags:source.tags,
+    id: btoa(encodeURIComponent((item.link || '') + (item.title || ''))).slice(0, 16),
+    title: item.title || '',
+    desc: stripHtml(item.description || item.content || '').slice(0, 180),
+    link: item.link || '#',
+    thumb: item.thumbnail || item.enclosure?.link || extractImg(item.description || '') || null,
+    date: item.pubDate || new Date().toISOString(),
+    source: source.name, sourceId: source.id,
+    sourceColor: source.color, sourceEmoji: source.emoji,
+    tags: source.tags,
   };
 }
 
-function stripHtml(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent||''}
-function extractImg(h){const m=h.match(/<img[^>]+src=["']([^"']+)["']/i);return m?m[1]:null}
+function stripHtml(h) { const d = document.createElement('div'); d.innerHTML = h; return d.textContent || ''; }
+function extractImg(h) { const m = h.match(/<img[^>]+src=["']([^"']+)["']/i); return m ? m[1] : null; }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // FILTROS
-// ══════════════════════════════════════════════
-function setTag(tag,el){
-  activeTag=tag; activeSrc='all'; srchQ='';
-  document.getElementById('srch-inp').value='';
-  document.querySelectorAll('.qf').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.src-item').forEach(e=>e.classList.remove('active'));
-  applyFilters();
-}
-function setSrc(id,el){
-  activeSrc=id; activeTag='all'; srchQ='';
-  document.getElementById('srch-inp').value='';
-  document.querySelectorAll('.src-item,.qf').forEach(e=>e.classList.remove('active'));
+// ══════════════════════════════════════════════════════
+function setFilter(f, el) {
+  activeFilter = f; activeSrc = 'all'; srchQ = '';
+  document.getElementById('srch-inp').value = '';
+  document.querySelectorAll('.fchip').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   applyFilters();
 }
-function doSearch(q){ srchQ=q.toLowerCase(); applyFilters(); }
+function doSearch(q) { srchQ = q.toLowerCase(); applyFilters(); }
 
-function applyFilters(){
-  let news=[...allNews];
-  if(activeTag==='saved') news=news.filter(n=>saved.includes(n.id));
-  else if(activeTag!=='all') news=news.filter(n=>n.tags?.includes(activeTag));
-  if(activeSrc!=='all') news=news.filter(n=>n.sourceId===activeSrc);
-  if(srchQ) news=news.filter(n=>n.title.toLowerCase().includes(srchQ)||n.desc.toLowerCase().includes(srchQ));
-  filtered=news;
-  const titles={all:'Todas las noticias',bolsa:'Bolsa y mercados',macro:'Macroeconomía',empresa:'Empresas',saved:'Noticias guardadas'};
-  const src=SOURCES.find(s=>s.id===activeSrc);
-  document.getElementById('feed-title').textContent=src?src.name:(titles[activeTag]||'Todas');
-  document.getElementById('n-count').textContent=`${filtered.length} noticias`;
+function applyFilters() {
+  let news = [...allNews];
+  if (activeFilter === 'saved') news = news.filter(n => saved.includes(n.id));
+  else if (activeFilter !== 'all') news = news.filter(n => n.tags?.includes(activeFilter));
+  if (activeSrc !== 'all') news = news.filter(n => n.sourceId === activeSrc);
+  if (srchQ) news = news.filter(n =>
+    n.title.toLowerCase().includes(srchQ) || n.desc.toLowerCase().includes(srchQ));
+  filtered = news;
+  const titles = { all: 'Todas las noticias', bolsa: 'Bolsa y mercados', macro: 'Macroeconomía', empresa: 'Empresas', saved: 'Guardadas' };
+  document.getElementById('feed-title').textContent = titles[activeFilter] || 'Todas';
+  document.getElementById('n-count').textContent = `${filtered.length} noticias`;
   renderNews(filtered);
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // RENDER
-// ══════════════════════════════════════════════
-function renderNews(news){
-  const fb=document.getElementById('feed-body');
-  if(!news.length){
-    fb.innerHTML=`<div class="empty"><p style="font-size:2rem">🔍</p><p style="margin-top:10px">No se encontraron noticias</p>${errCount?'<p style="color:var(--red);margin-top:8px;font-size:.8rem">'+errCount+' fuentes no pudieron cargarse</p>':''}</div>`;
+// ══════════════════════════════════════════════════════
+function renderNews(news) {
+  const fb = document.getElementById('feed-body');
+  if (!SOURCES.length) {
+    fb.innerHTML = `<div class="empty"><p style="font-size:2.5rem;margin-bottom:12px">📰</p><p style="font-size:.9rem;margin-bottom:6px">No hay fuentes configuradas</p><p style="font-size:.78rem">Pulsa <strong style="color:var(--accent)">➕ Añadir fuente</strong> para empezar</p></div>`;
     return;
   }
-  fb.innerHTML=news.map((n,i)=>cardHTML(n,i)).join('');
+  if (!news.length) {
+    fb.innerHTML = `<div class="empty"><p style="font-size:1.8rem">🔍</p><p style="margin-top:8px;font-size:.85rem">Sin noticias para este filtro</p></div>`;
+    return;
+  }
+  fb.innerHTML = news.map((n, i) => cardHTML(n, i)).join('');
 }
 
-function cardHTML(n,i){
-  const sv=saved.includes(n.id);
-  const tstr=relTime(new Date(n.date));
-  const thumb=n.thumb
-    ?`<img class="thumb" src="${esc(n.thumb)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`+
-     `<div class="thumb-ph" style="display:none">${n.sourceEmoji}</div>`
-    :`<div class="thumb-ph">${n.sourceEmoji}</div>`;
-  const enc=encodeURIComponent;
+function cardHTML(n, i) {
+  const sv = saved.includes(n.id);
+  const enc = encodeURIComponent;
+  const thumb = n.thumb
+    ? `<img class="thumb" src="${esc(n.thumb)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="thumb-ph" style="display:none">${n.sourceEmoji}</div>`
+    : `<div class="thumb-ph">${n.sourceEmoji}</div>`;
   return `
-<div class="card" style="animation-delay:${Math.min(i*25,250)}ms">
+<div class="card" style="animation-delay:${Math.min(i * 22, 220)}ms">
   ${thumb}
   <div class="cbody">
     <div class="src-badge" style="color:${n.sourceColor}">
       <span class="dot" style="background:${n.sourceColor}"></span>${n.source}
     </div>
     <a class="ctitle" href="${esc(n.link)}" target="_blank" rel="noopener">${n.title}</a>
-    ${n.desc?`<div class="cdesc">${n.desc}</div>`:''}
+    ${n.desc ? `<div class="cdesc">${n.desc}</div>` : ''}
     <div class="cfooter">
-      <span class="ctime">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        ${tstr}
-      </span>
+      <span class="ctime">${relTime(new Date(n.date))}</span>
       <div class="cactions">
-        <button class="abtn ${sv?'saved':''}" onclick="toggleSave('${n.id}',this)">
-          ${sv?'🔖 Guardada':'📌 Guardar'}
-        </button>
+        <button class="abtn ${sv ? 'saved' : ''}" onclick="toggleSave('${n.id}',this)">${sv ? '🔖' : '📌'}</button>
         <a class="abtn" href="${esc(n.link)}" target="_blank" rel="noopener">🔗 Leer</a>
         <div class="sw">
-          <button class="abtn" onclick="toggleShare(this)">↗ Compartir</button>
+          <button class="abtn" onclick="toggleShare(this)">↗</button>
           <div class="smenu">
-            <a class="sopt" href="https://wa.me/?text=${enc(n.title+' '+n.link)}" target="_blank" rel="noopener"><span>📱</span>WhatsApp</a>
-            <a class="sopt" href="https://t.me/share/url?url=${enc(n.link)}&text=${enc(n.title)}" target="_blank" rel="noopener"><span>✈️</span>Telegram</a>
-            <a class="sopt" href="https://twitter.com/intent/tweet?text=${enc(n.title)}&url=${enc(n.link)}" target="_blank" rel="noopener"><span>𝕏</span>Twitter/X</a>
-            <a class="sopt" href="https://www.linkedin.com/sharing/share-offsite/?url=${enc(n.link)}" target="_blank" rel="noopener"><span>💼</span>LinkedIn</a>
+            <a class="sopt" href="https://wa.me/?text=${enc(n.title + ' ' + n.link)}" target="_blank"><span>📱</span>WhatsApp</a>
+            <a class="sopt" href="https://t.me/share/url?url=${enc(n.link)}&text=${enc(n.title)}" target="_blank"><span>✈️</span>Telegram</a>
+            <a class="sopt" href="https://twitter.com/intent/tweet?text=${enc(n.title)}&url=${enc(n.link)}" target="_blank"><span>𝕏</span>Twitter/X</a>
+            <a class="sopt" href="https://www.linkedin.com/sharing/share-offsite/?url=${enc(n.link)}" target="_blank"><span>💼</span>LinkedIn</a>
             <div class="sopt" onclick="copyLink('${esc(n.link)}')"><span>📋</span>Copiar enlace</div>
-            <a class="sopt" href="mailto:?subject=${enc(n.title)}&body=${enc(n.link)}" rel="noopener"><span>📧</span>Email</a>
+            <a class="sopt" href="mailto:?subject=${enc(n.title)}&body=${enc(n.link)}"><span>📧</span>Email</a>
           </div>
         </div>
       </div>
@@ -503,156 +487,217 @@ function cardHTML(n,i){
 </div>`;
 }
 
-// ══════════════════════════════════════════════
-// SIDEBAR
-// ══════════════════════════════════════════════
-function buildSidebar(){
-  const counts={};
-  allNews.forEach(n=>counts[n.sourceId]=(counts[n.sourceId]||0)+1);
-  document.getElementById('src-list').innerHTML=SOURCES.map(s=>`
-    <div class="src-item ${activeSrc===s.id?'active':''}" onclick="setSrc('${s.id}',this)">
+// ══════════════════════════════════════════════════════
+// CHIPS DE FUENTES
+// ══════════════════════════════════════════════════════
+function renderSourceChips() {
+  const container = document.getElementById('src-chips');
+  const chips = SOURCES.map(s => `
+    <div class="src-chip" title="Eliminar ${s.name}" onclick="removeSource('${s.id}')">
       <span class="dot" style="background:${s.color}"></span>
-      <span>${s.name}</span>
-      <span class="cnt">${counts[s.id]||0}</span>
-    </div>`).join('');
-}
-
-function buildToggles(){
-  document.getElementById('src-togs').innerHTML=SOURCES.map(s=>`
-    <div class="stog">
       <span>${s.emoji} ${s.name}</span>
-      <div class="tog ${enabled[s.id]!==false?'on':''}" onclick="toggleSrc('${s.id}',this)"></div>
+      <span class="x">✕</span>
     </div>`).join('');
+  container.innerHTML = chips + `<div class="add-src-chip" onclick="openModal()">➕ Añadir fuente</div>`;
 }
 
-function toggleSrc(id,el){
-  enabled[id]=!enabled[id];
-  el.classList.toggle('on',enabled[id]);
-  localStorage.setItem('mp_enabled',JSON.stringify(enabled));
+function removeSource(id) {
+  const src = SOURCES.find(s => s.id === id);
+  if (!src) return;
+  if (!confirm(`¿Eliminar "${src.name}" de tus fuentes?`)) return;
+  SOURCES = SOURCES.filter(s => s.id !== id);
+  allNews = allNews.filter(n => n.sourceId !== id);
+  saveSources();
+  renderSourceChips();
+  applyFilters();
+  toast(`"${src.name}" eliminada`);
 }
 
-// ══════════════════════════════════════════════
-// GUARDAR
-// ══════════════════════════════════════════════
-function toggleSave(id,btn){
-  const i=saved.indexOf(id);
-  if(i===-1){saved.push(id);btn.innerHTML='🔖 Guardada';btn.classList.add('saved');toast('Noticia guardada');}
-  else{saved.splice(i,1);btn.innerHTML='📌 Guardar';btn.classList.remove('saved');toast('Eliminada de guardadas');}
-  localStorage.setItem('mp_saved',JSON.stringify(saved));
-  renderSaved();
+// ══════════════════════════════════════════════════════
+// BÚSQUEDA DE FUENTES EN MODAL
+// ══════════════════════════════════════════════════════
+function onQueryInput(val) {
+  clearTimeout(searchTimer);
+  const q = val.trim().toLowerCase();
+  const res = document.getElementById('src-results');
+
+  if (!q) { res.classList.remove('show'); res.innerHTML = ''; return; }
+
+  // Búsqueda local instantánea en KNOWN_FEEDS
+  const matches = KNOWN_FEEDS.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    f.url.toLowerCase().includes(q) ||
+    f.tags.some(t => t.includes(q))
+  ).filter(f => !SOURCES.find(s => s.url === f.url)); // excluir ya añadidas
+
+  if (matches.length) {
+    showResults(matches);
+  } else {
+    // Si no hay coincidencias locales, buscar vía Claude API
+    searchTimer = setTimeout(() => searchViaAPI(q), 600);
+    res.classList.add('show');
+    res.innerHTML = `<div class="src-msg">🔍 Buscando "${val}"...</div>`;
+    document.getElementById('searching').style.display = 'block';
+  }
 }
-function renderSaved(){
-  const items=allNews.filter(n=>saved.includes(n.id));
-  const el=document.getElementById('saved-panel');
-  if(!items.length){el.innerHTML='<p style="font-size:.74rem;color:var(--text3)">Usa 📌 para guardar noticias</p>';return;}
-  el.innerHTML=items.slice(0,7).map(n=>`
-    <div class="saved-it" onclick="window.open('${esc(n.link)}','_blank')">
-      <div class="ss">${n.sourceEmoji} ${n.source}</div>
-      ${n.title.slice(0,75)}${n.title.length>75?'...':''}
+
+function showResults(feeds) {
+  const res = document.getElementById('src-results');
+  document.getElementById('searching').style.display = 'none';
+  if (!feeds.length) {
+    res.classList.add('show');
+    res.innerHTML = `<div class="src-msg err">No se encontraron feeds para ese medio. Prueba con el nombre exacto o usa la URL manual.</div>`;
+    return;
+  }
+  res.classList.add('show');
+  res.innerHTML = feeds.map((f, i) => `
+    <div class="src-result-item" onclick="selectFeed(${i})">
+      <div class="sri-top">
+        <span class="sri-emoji">${f.emoji}</span>
+        <span class="sri-name">${f.name}</span>
+        <span class="sri-badge">${f.tags[0]}</span>
+      </div>
+      <div class="sri-url">${f.url}</div>
     </div>`).join('');
+  // Guardar temporalmente los resultados para poder referenciarlos
+  res._results = feeds;
 }
 
-// ══════════════════════════════════════════════
-// COMPARTIR
-// ══════════════════════════════════════════════
-function toggleShare(btn){
-  const m=btn.nextElementSibling;
-  const wasOpen=m.classList.contains('open');
-  document.querySelectorAll('.smenu.open').forEach(x=>x.classList.remove('open'));
-  if(!wasOpen) m.classList.add('open');
-}
-function copyLink(url){
-  navigator.clipboard.writeText(url).then(()=>toast('Enlace copiado ✓'));
-  document.querySelectorAll('.smenu.open').forEach(m=>m.classList.remove('open'));
-}
-
-// ══════════════════════════════════════════════
-// AÑADIR FUENTE
-// ══════════════════════════════════════════════
-function openAddSource(){
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('m-url').focus();
-  setStatus('','');
-}
-function closeModal(){
-  document.getElementById('overlay').classList.remove('open');
-  ['m-url','m-name','m-emoji'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('m-color').value='#d4a843';
-  setStatus('','');
-}
-function setStatus(type,msg){
-  const el=document.getElementById('m-status');
-  el.className='mstatus'+(type?' '+type:'');
-  el.textContent=msg;
-}
-
-async function testFeed(){
-  const url=document.getElementById('m-url').value.trim();
-  if(!url){setStatus('err','Introduce una URL de RSS primero');return;}
-  setStatus('','⏳ Verificando feed...');
-  try{
-    const src={id:'test',name:'Test',color:'#fff',emoji:'📰',url,tags:['bolsa']};
-    const items=await fetchWithFallback(src);
-    if(items.length){
-      setStatus('ok',`✓ Feed válido — ${items.length} noticias encontradas. Título: "${items[0].title.slice(0,60)}..."`);
-      if(!document.getElementById('m-name').value && items[0].source)
-        document.getElementById('m-name').value=items[0].source;
-    } else setStatus('err','Feed vacío o no accesible. Prueba con otra URL.');
-  }catch(e){setStatus('err','Error: '+e.message);}
-}
-
-function addSource(){
-  const url=document.getElementById('m-url').value.trim();
-  const name=document.getElementById('m-name').value.trim();
-  if(!url||!name){setStatus('err','URL y nombre son obligatorios');return;}
-  const id='custom_'+Date.now();
-  const emoji=document.getElementById('m-emoji').value.trim()||'📰';
-  const color=document.getElementById('m-color').value;
-  const tagVal=document.getElementById('m-tag').value;
-  const tags=tagVal.split(',');
-  const src={id,name,color,emoji,url,tags,custom:true};
-  SOURCES.push(src);
-  enabled[id]=true;
-  localStorage.setItem('mp_sources',JSON.stringify(SOURCES));
-  localStorage.setItem('mp_enabled',JSON.stringify(enabled));
-  buildSidebar(); buildToggles();
+function selectFeed(i) {
+  const res = document.getElementById('src-results');
+  const feed = res._results[i];
+  if (!feed) return;
+  addFeedToSources(feed);
   closeModal();
-  toast(`✓ "${name}" añadida. Actualiza para cargar sus noticias.`);
 }
 
-// ══════════════════════════════════════════════
-// TICKER
-// ══════════════════════════════════════════════
-function updateTicker(){
-  const d=[
-    {v:'12.847',c:'+0,34%',up:true},
-    {v:'1,1204',c:'-0,12%',up:false},
-    {v:'5.893', c:'+0,61%',up:true},
-    {v:'3.274$',c:'+0,22%',up:true},
-  ];
-  d.forEach((x,i)=>{
-    document.getElementById('t'+(i+1)).textContent=x.v;
-    const el=document.getElementById('t'+(i+1)+'c');
-    el.textContent=x.c; el.className='c '+(x.up?'up':'dn');
-  });
+async function searchViaAPI(query) {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Eres un experto en medios de comunicación financieros y sus feeds RSS. 
+Cuando el usuario busque un medio, devuelve SOLO un JSON array con feeds RSS reales y verificados.
+Formato exacto (sin markdown, sin explicaciones, solo el JSON):
+[{"name":"Nombre del medio","url":"https://url-del-rss.xml","emoji":"📰","color":"#hexcolor","tags":["bolsa","macro","empresa"]}]
+Tags válidos: bolsa, macro, empresa. Color en hex. Máximo 4 resultados.
+Si no conoces feeds fiables para ese medio, devuelve [].`,
+        messages: [{ role: 'user', content: `Feeds RSS de: ${query}` }]
+      })
+    });
+    const data = await response.json();
+    document.getElementById('searching').style.display = 'none';
+
+    if (data.error) {
+      // Sin API key configurada — mostrar mensaje
+      const res = document.getElementById('src-results');
+      res.innerHTML = `<div class="src-msg err">Búsqueda avanzada no disponible en modo local. Usa la URL manual o prueba otro nombre.</div>`;
+      return;
+    }
+
+    const text = data.content?.[0]?.text || '[]';
+    let feeds = [];
+    try { feeds = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch (e) { feeds = []; }
+    showResults(feeds);
+  } catch (e) {
+    document.getElementById('searching').style.display = 'none';
+    const res = document.getElementById('src-results');
+    res.innerHTML = `<div class="src-msg err">Error de búsqueda. Introduce la URL directamente.</div>`;
+  }
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// AÑADIR FUENTE
+// ══════════════════════════════════════════════════════
+function addFeedToSources(feed) {
+  const id = 'src_' + Date.now();
+  const src = {
+    id,
+    name: feed.name,
+    url: feed.url,
+    emoji: feed.emoji || '📰',
+    color: feed.color || '#d4a843',
+    tags: Array.isArray(feed.tags) ? feed.tags : ['bolsa'],
+  };
+  SOURCES.push(src);
+  saveSources();
+  renderSourceChips();
+  toast(`✓ "${src.name}" añadida`);
+}
+
+function addManual() {
+  const url = document.getElementById('m-url').value.trim();
+  const name = document.getElementById('m-name').value.trim();
+  if (!url || !name) { toast('⚠ URL y nombre son obligatorios'); return; }
+  addFeedToSources({ name, url, emoji: '📰', color: '#d4a843', tags: ['bolsa', 'macro', 'empresa'] });
+  closeModal();
+}
+
+function saveSources() {
+  localStorage.setItem('mp_sources2', JSON.stringify(SOURCES));
+}
+
+// ══════════════════════════════════════════════════════
+// GUARDAR NOTICIAS
+// ══════════════════════════════════════════════════════
+function toggleSave(id, btn) {
+  const i = saved.indexOf(id);
+  if (i === -1) { saved.push(id); btn.innerHTML = '🔖'; btn.classList.add('saved'); toast('Guardada'); }
+  else { saved.splice(i, 1); btn.innerHTML = '📌'; btn.classList.remove('saved'); toast('Eliminada'); }
+  localStorage.setItem('mp_saved2', JSON.stringify(saved));
+}
+
+// ══════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('src-query').value = '';
+  document.getElementById('src-results').classList.remove('show');
+  document.getElementById('src-results').innerHTML = '';
+  document.getElementById('searching').style.display = 'none';
+  setTimeout(() => document.getElementById('src-query').focus(), 200);
+}
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+function toggleManual() {
+  document.getElementById('manual-sec').classList.toggle('show');
+}
+
+// ══════════════════════════════════════════════════════
+// COMPARTIR
+// ══════════════════════════════════════════════════════
+function toggleShare(btn) {
+  const m = btn.nextElementSibling;
+  const was = m.classList.contains('open');
+  document.querySelectorAll('.smenu.open').forEach(x => x.classList.remove('open'));
+  if (!was) m.classList.add('open');
+}
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => toast('Enlace copiado ✓'));
+  document.querySelectorAll('.smenu.open').forEach(m => m.classList.remove('open'));
+}
+
+// ══════════════════════════════════════════════════════
 // UTILS
-// ══════════════════════════════════════════════
-function relTime(d){
-  const s=(Date.now()-d)/1000;
-  if(s<60) return 'Ahora mismo';
-  if(s<3600) return `Hace ${Math.floor(s/60)} min`;
-  if(s<86400) return `Hace ${Math.floor(s/3600)} h`;
-  return `Hace ${Math.floor(s/86400)} días`;
+// ══════════════════════════════════════════════════════
+function relTime(d) {
+  const s = (Date.now() - d) / 1000;
+  if (s < 60) return 'Ahora';
+  if (s < 3600) return `Hace ${Math.floor(s / 60)}m`;
+  if (s < 86400) return `Hace ${Math.floor(s / 3600)}h`;
+  return `Hace ${Math.floor(s / 86400)}d`;
 }
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
 }
-function esc(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function esc(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 </script>
 </body>
 </html>
