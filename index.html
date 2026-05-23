@@ -6,55 +6,66 @@
 <title>MarketPulse</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--border:#252a38;--accent:#d4a843;--accent2:#e8c96a;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e78;--green:#34c98a;--red:#e05a5a;--radius:10px;--fh:'Playfair Display',serif;--fb:'Source Sans 3',sans-serif}
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--border:#252a38;
+  --accent:#d4a843;--accent2:#e8c96a;--text:#e8eaf0;--text2:#8b92a8;
+  --text3:#555e78;--green:#34c98a;--red:#e05a5a;--radius:10px;
+  --fh:'Playfair Display',serif;--fb:'Source Sans 3',sans-serif;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh}
+a{color:inherit;text-decoration:none}
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
 .logo{font-family:var(--fh);font-size:1.2rem;color:var(--accent);display:flex;align-items:center;gap:6px}
-.logo span{color:var(--text)}
+.logo b{color:var(--text);font-weight:600}
 .hbtns{display:flex;gap:7px}
-.hbtn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:var(--fb);font-size:.78rem;font-weight:600;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px;transition:all .2s}
+button{cursor:pointer;font-family:var(--fb)}
+.hbtn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:.78rem;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:5px;transition:all .2s}
 .hbtn:hover{border-color:var(--accent);color:var(--accent)}
 .hbtn.primary{background:var(--accent);color:#000;border-color:var(--accent)}
 .hbtn.primary:hover{background:var(--accent2)}
 .hbtn:disabled{opacity:.5;cursor:not-allowed}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .spin svg{animation:spin 1s linear infinite}
-.feed{padding:16px;max-width:820px;margin:0 auto}
+.page{padding:16px;max-width:820px;margin:0 auto}
 .feed-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .feed-hdr h2{font-family:var(--fh);font-size:1.05rem}
 .feed-meta{font-size:.7rem;color:var(--text3)}
-.src-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.src-chip{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:.72rem;cursor:pointer;transition:all .15s}
-.src-chip:hover{border-color:var(--red)}
-.src-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.src-x{color:var(--text3);margin-left:3px}
-.add-chip{background:var(--bg3);border:1px dashed var(--border);border-radius:20px;padding:4px 10px;font-size:.72rem;cursor:pointer;color:var(--text3);transition:all .15s}
-.add-chip:hover{border-color:var(--accent);color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:.72rem;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--red)}
+.cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cx{color:var(--text3);margin-left:3px;font-size:.9rem}
+.chip:hover .cx{color:var(--red)}
+.addchip{background:var(--bg3);border:1px dashed var(--border);border-radius:20px;padding:4px 10px;font-size:.72rem;cursor:pointer;color:var(--text3);transition:all .15s}
+.addchip:hover{border-color:var(--accent);color:var(--accent)}
 .filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
-.fchip{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.74rem;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all .15s}
-.fchip:hover{border-color:var(--accent);color:var(--accent)}
-.fchip.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.fc{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.74rem;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all .15s}
+.fc:hover{border-color:var(--accent);color:var(--accent)}
+.fc.on{background:var(--accent);color:#000;border-color:var(--accent)}
 .srch{position:relative;margin-bottom:12px}
 .srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3)}
 #si{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 34px;color:var(--text);font-family:var(--fb);font-size:.83rem;outline:none;transition:border-color .2s}
 #si:focus{border-color:var(--accent)}
 #si::placeholder{color:var(--text3)}
-.card{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;transition:border-color .2s,box-shadow .2s;animation:fadeUp .3s ease forwards;opacity:0}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARD */
+.card{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;transition:border-color .2s,box-shadow .2s,opacity .2s;animation:fadeUp .3s ease forwards;opacity:0;cursor:pointer}
 .card:hover{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
+.card.read{opacity:.5}
+.card.read .ctitle{color:var(--text2)}
 .thumb{width:82px;height:62px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--bg3)}
-.thumb-ph{width:82px;height:62px;border-radius:6px;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.thumbph{width:82px;height:62px;border-radius:6px;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 .cbody{flex:1;min-width:0}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
-.badge-dot{width:4px;height:4px;border-radius:50%}
-.ctitle{font-size:.85rem;font-weight:600;line-height:1.35;color:var(--text);margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-decoration:none}
-.ctitle:hover{color:var(--accent)}
+.bdot{width:4px;height:4px;border-radius:50%}
+.ctitle{font-size:.85rem;font-weight:600;line-height:1.35;color:var(--text);margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cdesc{font-size:.73rem;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
 .cfooter{display:flex;align-items:center;gap:6px}
 .ctime{font-size:.67rem;color:var(--text3)}
 .cacts{display:flex;gap:4px;margin-left:auto}
-.abtn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;color:var(--text2);font-size:.67rem;font-family:var(--fb);display:flex;align-items:center;gap:3px;transition:all .15s;text-decoration:none;white-space:nowrap}
+.abtn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;color:var(--text2);font-size:.67rem;display:flex;align-items:center;gap:3px;transition:all .15s;text-decoration:none;white-space:nowrap}
 .abtn:hover{background:var(--accent);color:#000;border-color:var(--accent)}
 .abtn.sv{color:var(--accent);border-color:var(--accent)}
 .sw{position:relative}
@@ -62,11 +73,14 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
 .smenu.open{display:block}
 .sopt{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:5px;cursor:pointer;font-size:.75rem;color:var(--text2);transition:all .15s;text-decoration:none}
 .sopt:hover{background:var(--bg3);color:var(--text)}
+
 .loading,.empty{text-align:center;padding:50px 20px;color:var(--text3)}
 .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-top-left-radius:16px;border-top-right-radius:16px;padding:22px 18px 36px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.ov.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-top-left-radius:16px;border-top-right-radius:16px;padding:22px 18px 36px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto}
 .mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
 .modal h3{font-family:var(--fh);font-size:1.1rem;margin-bottom:5px}
 .msub{font-size:.76rem;color:var(--text2);margin-bottom:16px;line-height:1.5}
@@ -75,7 +89,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
 .msr input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px 10px 38px;color:var(--text);font-family:var(--fb);font-size:.88rem;outline:none;transition:border-color .2s}
 .msr input:focus{border-color:var(--accent)}
 .msr input::placeholder{color:var(--text3)}
-.mres{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;display:none;max-height:240px;overflow-y:auto}
+.mres{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px;display:none;max-height:220px;overflow-y:auto}
 .mres.show{display:block}
 .mri{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .mri:last-child{border-bottom:none}
@@ -96,34 +110,50 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
 .mbtn:hover{border-color:var(--text2);color:var(--text)}
 .mbtn.ok{background:var(--accent);color:#000;border-color:var(--accent)}
 .mbtn.ok:hover{background:var(--accent2)}
+
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;font-size:.8rem;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* LECTOR INTERNO */
+.reader-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.reader-ov.open{display:flex}
+.reader{background:var(--bg2);border:1px solid var(--border);border-top-left-radius:16px;border-top-right-radius:16px;width:100%;max-width:640px;height:88vh;display:flex;flex-direction:column}
+.reader-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+.reader-close{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.75rem;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .2s}
+.reader-close:hover{border-color:var(--red);color:var(--red)}
+.reader-meta{flex:1;min-width:0}
+.reader-source{font-size:.65rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
+.reader-title{font-family:var(--fh);font-size:1rem;line-height:1.35;color:var(--text)}
+.reader-frame{flex:1;border:none;background:#fff;border-radius:0 0 16px 16px}
+.reader-bar{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.reader-bar a{flex:1;text-align:center;padding:9px;border-radius:7px;background:var(--accent);color:#000;font-size:.82rem;font-weight:700}
 </style>
 </head>
 <body>
+
 <header>
-  <div class="logo">📈 <span>Market</span>Pulse</div>
+  <div class="logo">📈 <b>Market</b>Pulse</div>
   <div class="hbtns">
-    <button class="hbtn" id="btn-add" onclick="openModal()">➕ Añadir</button>
-    <button class="hbtn primary" id="btn-ref" onclick="loadAll()">
+    <button class="hbtn" onclick="openModal()">➕ Añadir</button>
+    <button class="hbtn primary" id="btnref" onclick="loadAll()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Actualizar
     </button>
   </div>
 </header>
 
-<div class="feed">
+<div class="page">
   <div class="feed-hdr">
-    <h2 id="feed-title">Todas las noticias</h2>
-    <div class="feed-meta" id="feed-meta">0 noticias</div>
+    <h2 id="ftitle">Todas las noticias</h2>
+    <div class="feed-meta" id="fmeta">0 noticias</div>
   </div>
-  <div class="src-chips" id="src-chips"></div>
+  <div class="chips" id="chips"></div>
   <div class="filters">
-    <div class="fchip active" onclick="setF('all',this)">📰 Todas</div>
-    <div class="fchip" onclick="setF('bolsa',this)">📊 Bolsa</div>
-    <div class="fchip" onclick="setF('macro',this)">🏦 Macro</div>
-    <div class="fchip" onclick="setF('empresa',this)">🏢 Empresas</div>
-    <div class="fchip" onclick="setF('saved',this)">🔖 Guardadas</div>
+    <div class="fc on" onclick="setF('all',this)">📰 Todas</div>
+    <div class="fc" onclick="setF('bolsa',this)">📊 Bolsa</div>
+    <div class="fc" onclick="setF('macro',this)">🏦 Macro</div>
+    <div class="fc" onclick="setF('empresa',this)">🏢 Empresas</div>
+    <div class="fc" onclick="setF('saved',this)">🔖 Guardadas</div>
   </div>
   <div class="srch">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -132,76 +162,111 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16p
   <div id="fb"></div>
 </div>
 
-<div class="overlay" id="ov" onclick="if(event.target===this)closeModal()">
+<!-- MODAL AÑADIR -->
+<div class="ov" id="ov" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="mhandle"></div>
     <h3>Añadir fuente</h3>
-    <p class="msub">Escribe el nombre del medio y selecciona de la lista. También puedes pegar una URL RSS directamente.</p>
+    <p class="msub">Escribe el nombre del medio y selecciona de la lista. O pega la URL del RSS directamente.</p>
     <div class="msr">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="mq" placeholder="Bloomberg, Reuters, Expansión…" oninput="onQ(this.value)" autocomplete="off">
+      <input type="text" id="mq" placeholder="Reuters, Bloomberg, Expansión…" oninput="onQ(this.value)" autocomplete="off">
     </div>
     <div class="mres" id="mres"></div>
     <div class="mdiv">o introduce URL directamente</div>
     <label class="mlbl">URL del feed RSS</label>
     <input type="url" class="minp" id="mu" placeholder="https://ejemplo.com/feed.xml">
-    <label class="mlbl">Nombre</label>
-    <input type="text" class="minp" id="mn" placeholder="Nombre del medio">
+    <label class="mlbl">Nombre del medio</label>
+    <input type="text" class="minp" id="mn" placeholder="Nombre">
     <div class="mbts">
       <button class="mbtn" onclick="closeModal()">Cancelar</button>
-      <button class="mbtn ok" onclick="addManual()">Añadir URL</button>
+      <button class="mbtn ok" onclick="addManual()">Añadir</button>
     </div>
   </div>
 </div>
+
+<!-- LECTOR NOTICIAS -->
+<div class="reader-ov" id="rov" onclick="if(event.target===this)closeReader()">
+  <div class="reader">
+    <div class="reader-hdr">
+      <button class="reader-close" onclick="closeReader()">✕ Cerrar</button>
+      <div class="reader-meta">
+        <div class="reader-source" id="rsource"></div>
+        <div class="reader-title" id="rtitle"></div>
+      </div>
+    </div>
+    <iframe class="reader-frame" id="rframe" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    <div class="reader-bar">
+      <a id="rlink" href="#" target="_blank" rel="noopener">Abrir en navegador ↗</a>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── FUENTES — todas usan rss2json.com con Google News como fuente ──────────────
-// rss2json actúa como proxy y devuelve JSON limpio sin problemas de CSP ni CORS
-const KNOWN = [
-  {n:'El Economista',     e:'📰',c:'#e05a5a',t:['bolsa','macro','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:eleconomista.es&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Expansión',         e:'💼',c:'#d4a843',t:['bolsa','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:expansion.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Cinco Días',        e:'📊',c:'#4a9edd',t:['macro','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:cincodias.elpais.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'El Confidencial',   e:'🔵',c:'#3b82f6',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:elconfidencial.com+mercados&hl=es&gl=ES&ceid=ES:es'},
-  {n:'El País Economía',  e:'🗞',c:'#6366f1',t:['macro','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:elpais.com+economia&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Bolsamanía',        e:'📈',c:'#22c55e',t:['bolsa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:bolsamania.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Invertia',          e:'🔍',c:'#a855f7',t:['bolsa','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:invertia.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Reuters',           e:'📡',c:'#fb923c',t:['macro','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:reuters.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Bloomberg',         e:'🌐',c:'#f97316',t:['macro','bolsa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:bloomberg.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Financial Times',   e:'🗞',c:'#e8c96a',t:['macro','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:ft.com+finance&hl=en&gl=US&ceid=US:en'},
-  {n:'MarketWatch',       e:'⚡',c:'#a3e635',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:marketwatch.com&hl=en&gl=US&ceid=US:en'},
-  {n:'CNBC',              e:'📺',c:'#0ea5e9',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:cnbc.com+markets&hl=en&gl=US&ceid=US:en'},
-  {n:'Yahoo Finance',     e:'💹',c:'#6d28d9',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:finance.yahoo.com&hl=en&gl=US&ceid=US:en'},
-  {n:'Seeking Alpha',     e:'🔎',c:'#67e8f9',t:['bolsa','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:seekingalpha.com&hl=en&gl=US&ceid=US:en'},
-  {n:'Wall Street Journal',e:'📓',c:'#b45309',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:wsj.com&hl=en&gl=US&ceid=US:en'},
-  {n:'The Economist',     e:'🎩',c:'#dc2626',t:['macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:economist.com&hl=en&gl=US&ceid=US:en'},
-  {n:'Investing.com',     e:'📈',c:'#34c98a',t:['bolsa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:investing.com&hl=es&gl=ES&ceid=ES:es'},
-  {n:'Forbes',            e:'🏆',c:'#eab308',t:['empresa','macro'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:forbes.com+finance&hl=en&gl=US&ceid=US:en'},
-  {n:'Morningstar',       e:'⭐',c:'#f59e0b',t:['bolsa','empresa'],
-   u:'https://news.google.com/rss/search?q=when:24h+allinurl:morningstar.com&hl=en&gl=US&ceid=US:en'},
+// ─────────────────────────────────────────────────────────────────
+// CLAVE FIJA DE ALMACENAMIENTO — nunca cambiar este valor
+// ─────────────────────────────────────────────────────────────────
+var STORE_KEY  = 'mpp_sources';   // fuentes añadidas
+var SAVED_KEY  = 'mpp_saved';     // noticias guardadas
+var READ_KEY   = 'mpp_read';      // noticias leídas
+
+// ─────────────────────────────────────────────────────────────────
+// FUENTES CONOCIDAS — URLs RSS directas verificadas
+// rss2json.com las convierte a JSON sin CORS ni eval
+// ─────────────────────────────────────────────────────────────────
+var KNOWN = [
+  // España
+  {n:'El Economista',       e:'📰',c:'#e05a5a',t:['bolsa','macro','empresa'],
+   u:'https://www.eleconomista.es/rss/rss.php'},
+  {n:'Expansión Mercados',  e:'💼',c:'#d4a843',t:['bolsa','empresa'],
+   u:'https://e00-expansion.uecdn.es/rss/mercados.xml'},
+  {n:'Expansión Economía',  e:'💼',c:'#c9963a',t:['macro','empresa'],
+   u:'https://e00-expansion.uecdn.es/rss/economia.xml'},
+  {n:'Cinco Días',          e:'📊',c:'#4a9edd',t:['macro','empresa'],
+   u:'https://feeds.elpais.com/mrss-s/pages/ep/site/cincodias.elpais.com/portada'},
+  {n:'El País Economía',    e:'🗞',c:'#6366f1',t:['macro','empresa'],
+   u:'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada'},
+  {n:'El Confidencial',     e:'🔵',c:'#3b82f6',t:['bolsa','macro'],
+   u:'https://rss.elconfidencial.com/mercados'},
+  {n:'Bolsamanía',          e:'📈',c:'#22c55e',t:['bolsa'],
+   u:'https://www.bolsamania.com/noticias/rss/todas-noticas--1.xml'},
+  {n:'Invertia',            e:'🔍',c:'#a855f7',t:['bolsa','empresa'],
+   u:'https://www.invertia.com/es/rss/ultimas-noticias.xml'},
+  // Internacional
+  {n:'Reuters Business',    e:'📡',c:'#fb923c',t:['macro','empresa'],
+   u:'https://feeds.reuters.com/reuters/businessNews'},
+  {n:'Reuters Markets',     e:'📡',c:'#f97316',t:['bolsa','macro'],
+   u:'https://feeds.reuters.com/reuters/marketsNews'},
+  {n:'Bloomberg',           e:'🌐',c:'#f97316',t:['macro','bolsa'],
+   u:'https://feeds.bloomberg.com/markets/news.rss'},
+  {n:'Financial Times',     e:'🗞',c:'#e8c96a',t:['macro','empresa'],
+   u:'https://www.ft.com/rss/home'},
+  {n:'MarketWatch',         e:'⚡',c:'#a3e635',t:['bolsa','macro'],
+   u:'https://feeds.marketwatch.com/marketwatch/topstories/'},
+  {n:'CNBC Markets',        e:'📺',c:'#0ea5e9',t:['bolsa','macro'],
+   u:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664'},
+  {n:'Yahoo Finance',       e:'💹',c:'#6d28d9',t:['bolsa','macro'],
+   u:'https://finance.yahoo.com/rss/topstories'},
+  {n:'Seeking Alpha',       e:'🔎',c:'#67e8f9',t:['bolsa','empresa'],
+   u:'https://seekingalpha.com/market_currents.xml'},
+  {n:'Wall Street Journal', e:'📓',c:'#b45309',t:['bolsa','macro'],
+   u:'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
+  {n:'The Economist',       e:'🎩',c:'#dc2626',t:['macro'],
+   u:'https://www.economist.com/finance-and-economics/rss.xml'},
+  {n:'Investing.com ES',    e:'📈',c:'#34c98a',t:['bolsa','macro'],
+   u:'https://es.investing.com/rss/news.rss'},
+  {n:'Morningstar',         e:'⭐',c:'#f59e0b',t:['bolsa','empresa'],
+   u:'https://www.morningstar.com/feeds/articles'},
 ];
 
-// ── ESTADO ──────────────────────────────────────────────────────────────────
-var SRCS  = JSON.parse(localStorage.getItem('mp4_s') || '[]');
-var SAVED = JSON.parse(localStorage.getItem('mp4_sv') || '[]');
+// ─────────────────────────────────────────────────────────────────
+// ESTADO — cargado desde localStorage al inicio
+// ─────────────────────────────────────────────────────────────────
+var SRCS  = lsGet(STORE_KEY, []);
+var SAVED = lsGet(SAVED_KEY, []);
+var READ  = lsGet(READ_KEY,  []);
 var NEWS  = [];
 var FILT  = [];
 var AF    = 'all';
@@ -209,7 +274,20 @@ var SQ    = '';
 var QT    = null;
 var MAX   = 150;
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
+// localStorage helpers — envueltos en try/catch por seguridad
+function lsGet(key, def) {
+  try {
+    var v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : def;
+  } catch(e) { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
 window.onload = function() {
   renderChips();
   renderNews([]);
@@ -220,116 +298,140 @@ window.onload = function() {
   });
 };
 
-// ── FETCH CON TIMEOUT MANUAL (sin AbortSignal.timeout) ───────────────────────
-function fetchTimeout(url, ms) {
-  return new Promise(function(resolve, reject) {
-    var ctrl = new AbortController();
-    var tid = setTimeout(function(){ ctrl.abort(); reject(new Error('timeout')); }, ms);
-    fetch(url, { signal: ctrl.signal })
-      .then(function(r){ clearTimeout(tid); resolve(r); })
-      .catch(function(e){ clearTimeout(tid); reject(e); });
-  });
-}
-
-// ── CARGA DE FEEDS ────────────────────────────────────────────────────────────
-// Usamos SOLO rss2json.com — devuelve JSON puro, sin XML, sin eval, sin CORS
-function rss2jsonUrl(feedUrl) {
-  return 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=30&api_key=';
+// ─────────────────────────────────────────────────────────────────
+// CARGA DE FEEDS
+// Usa rss2json.com como proxy CORS — devuelve JSON limpio
+// ─────────────────────────────────────────────────────────────────
+function apiUrl(feedUrl) {
+  return 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl) + '&count=30';
 }
 
 function loadAll() {
   if (!SRCS.length) { renderNews([]); return; }
-  var btn = document.getElementById('btn-ref');
+  var btn = document.getElementById('btnref');
   btn.classList.add('spin'); btn.disabled = true;
   document.getElementById('fb').innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando noticias...</p></div>';
 
-  var promises = SRCS.map(function(s){ return fetchOne(s); });
+  var done = 0;
+  var results = [];
+  var total = SRCS.length;
 
-  Promise.all(promises).then(function(results) {
-    NEWS = [];
-    var ok = 0;
-    results.forEach(function(items, i) {
-      if (items && items.length) { NEWS = NEWS.concat(items); ok++; }
+  SRCS.forEach(function(src, i) {
+    results[i] = [];
+    fetchOne(src, function(items) {
+      results[i] = items;
+      done++;
+      if (done === total) finish(results);
     });
-    NEWS.sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
-    if (NEWS.length > MAX) NEWS = NEWS.slice(0, MAX);
-
-    var now = new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
-    document.getElementById('feed-meta').textContent = NEWS.length + ' noticias · ' + now;
-    btn.classList.remove('spin'); btn.disabled = false;
-    applyF();
-    showToast(NEWS.length
-      ? '✓ ' + NEWS.length + ' noticias de ' + ok + '/' + SRCS.length + ' fuentes'
-      : '⚠ Sin noticias. Comprueba tu conexión.');
   });
 }
 
-function fetchOne(src) {
-  var url = rss2jsonUrl(src.u);
-  return fetchTimeout(url, 15000)
-    .then(function(r) { return r.json(); })
+function fetchOne(src, cb) {
+  var url = apiUrl(src.u);
+  var ctrl = new AbortController();
+  var tid = setTimeout(function(){ ctrl.abort(); }, 12000);
+
+  fetch(url, { signal: ctrl.signal })
+    .then(function(r) {
+      clearTimeout(tid);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(data) {
-      if (!data || data.status !== 'ok' || !data.items || !data.items.length) return [];
-      return data.items.map(function(item) { return normItem(item, src); });
+      if (!data || data.status !== 'ok' || !data.items || !data.items.length) {
+        cb([]);
+        return;
+      }
+      var items = [];
+      for (var i = 0; i < data.items.length; i++) {
+        items.push(normItem(data.items[i], src));
+      }
+      cb(items);
     })
     .catch(function(err) {
-      console.warn('Error en ' + src.n + ':', err.message);
-      return [];
+      clearTimeout(tid);
+      console.warn('Error cargando ' + src.n + ':', err.message);
+      cb([]);
     });
 }
 
+function finish(results) {
+  NEWS = [];
+  var ok = 0;
+  for (var i = 0; i < results.length; i++) {
+    if (results[i].length) { ok++; }
+    NEWS = NEWS.concat(results[i]);
+  }
+  NEWS.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  if (NEWS.length > MAX) NEWS = NEWS.slice(0, MAX);
+
+  var now = new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('fmeta').textContent = NEWS.length + ' noticias · ' + now;
+
+  var btn = document.getElementById('btnref');
+  btn.classList.remove('spin'); btn.disabled = false;
+  applyF();
+  toast(NEWS.length
+    ? '✓ ' + NEWS.length + ' noticias de ' + ok + '/' + SRCS.length + ' fuentes'
+    : '⚠ Sin noticias. Revisa tu conexión a internet.');
+}
+
 function normItem(item, src) {
-  var title = (item.title || '').replace(/\s+-\s+[\w\s,\.]+$/, '').trim();
-  var desc   = stripHtml(item.description || item.content || '').slice(0, 180);
+  var title = (item.title || '').replace(/\s*-\s*[\w\s,\.]{3,30}$/, '').trim();
+  var desc   = strip(item.description || item.content || '').slice(0, 180);
   var thumb  = item.thumbnail || (item.enclosure && item.enclosure.link) || null;
-  var id     = simpleHash(src.id + (item.link || title));
   return {
-    id: id, title: title, desc: desc,
-    link: item.link || '#',
+    id:    hash(src.id + (item.link || title)),
+    title: title || '(Sin título)',
+    desc:  desc,
+    link:  item.link || '#',
     thumb: thumb,
-    date: item.pubDate || new Date().toISOString(),
+    date:  item.pubDate || '',
     sn: src.n, si: src.id, sc: src.c, se: src.e, st: src.t
   };
 }
 
-function stripHtml(h) {
-  var tmp = document.createElement('div');
-  tmp.innerHTML = h;
-  return tmp.textContent || tmp.innerText || '';
+function strip(h) {
+  var d = document.createElement('div');
+  d.innerHTML = h;
+  return d.textContent || d.innerText || '';
 }
 
-function simpleHash(str) {
-  var h = 0;
-  for (var i = 0; i < str.length; i++) {
-    h = ((h << 5) - h) + str.charCodeAt(i);
-    h = h & h;
-  }
-  return Math.abs(h).toString(36);
+function hash(s) {
+  var h = 5381;
+  for (var i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
+  return (h >>> 0).toString(36);
 }
 
-// ── FILTROS ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// FILTROS
+// ─────────────────────────────────────────────────────────────────
 function setF(f, el) {
   AF = f; SQ = ''; document.getElementById('si').value = '';
-  document.querySelectorAll('.fchip').forEach(function(e){ e.classList.remove('active'); });
-  el.classList.add('active');
+  document.querySelectorAll('.fc').forEach(function(e){ e.classList.remove('on'); });
+  el.classList.add('on');
   applyF();
 }
+
 function doSearch(q) { SQ = q.toLowerCase(); applyF(); }
+
 function applyF() {
   var n = NEWS.slice();
-  if (AF === 'saved') n = n.filter(function(x){ return SAVED.includes(x.id); });
-  else if (AF !== 'all') n = n.filter(function(x){ return x.st && x.st.includes(AF); });
+  if (AF === 'saved') n = n.filter(function(x){ return SAVED.indexOf(x.id) !== -1; });
+  else if (AF !== 'all') n = n.filter(function(x){ return x.st && x.st.indexOf(AF) !== -1; });
   if (SQ) n = n.filter(function(x){
-    return x.title.toLowerCase().includes(SQ) || x.desc.toLowerCase().includes(SQ);
+    return x.title.toLowerCase().indexOf(SQ) !== -1 || x.desc.toLowerCase().indexOf(SQ) !== -1;
   });
   FILT = n;
   var titles = {all:'Todas las noticias',bolsa:'Bolsa y mercados',macro:'Macroeconomía',empresa:'Empresas',saved:'Guardadas'};
-  document.getElementById('feed-title').textContent = titles[AF] || 'Todas';
-  document.getElementById('feed-meta').textContent = n.length + ' noticias';
+  document.getElementById('ftitle').textContent = titles[AF] || 'Todas';
+  document.getElementById('fmeta').textContent = n.length + ' noticias';
   renderNews(n);
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// RENDER NOTICIAS
+// ─────────────────────────────────────────────────────────────────
 function renderNews(news) {
   var fb = document.getElementById('fb');
   if (!SRCS.length) {
@@ -346,35 +448,37 @@ function renderNews(news) {
 }
 
 function cardHTML(n, i) {
-  var sv  = SAVED.includes(n.id);
+  var sv  = SAVED.indexOf(n.id) !== -1;
+  var rd  = READ.indexOf(n.id) !== -1;
   var enc = encodeURIComponent;
-  var del = Math.min(i * 20, 200);
+  var del = Math.min(i * 18, 180);
   var thumb = n.thumb
     ? '<img class="thumb" src="' + esc(n.thumb) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
-      '<div class="thumb-ph" style="display:none">' + n.se + '</div>'
-    : '<div class="thumb-ph">' + n.se + '</div>';
-  return '<div class="card" style="animation-delay:' + del + 'ms">' +
+      '<div class="thumbph" style="display:none">' + n.se + '</div>'
+    : '<div class="thumbph">' + n.se + '</div>';
+
+  return '<div class="card' + (rd?' read':'') + '" style="animation-delay:' + del + 'ms" onclick="openArticle(\'' + n.id + '\')">' +
     thumb +
     '<div class="cbody">' +
       '<div class="badge" style="color:' + n.sc + '">' +
-        '<span class="badge-dot" style="background:' + n.sc + '"></span>' + n.sn +
+        '<span class="bdot" style="background:' + n.sc + '"></span>' + n.sn +
+        (rd ? ' <span style="font-size:.6rem;opacity:.6">· leída</span>' : '') +
       '</div>' +
-      '<a class="ctitle" href="' + esc(n.link) + '" target="_blank" rel="noopener">' + n.title + '</a>' +
+      '<div class="ctitle">' + n.title + '</div>' +
       (n.desc ? '<div class="cdesc">' + n.desc + '</div>' : '') +
       '<div class="cfooter">' +
         '<span class="ctime">' + relTime(n.date) + '</span>' +
         '<div class="cacts">' +
-          '<button class="abtn' + (sv?' sv':'') + '" onclick="toggleSave(\'' + n.id + '\',this)">' + (sv?'🔖':'📌') + '</button>' +
-          '<a class="abtn" href="' + esc(n.link) + '" target="_blank" rel="noopener">🔗 Leer</a>' +
+          '<button class="abtn ' + (sv?'sv':'') + '" onclick="event.stopPropagation();toggleSave(\'' + n.id + '\',this)">' + (sv?'🔖':'📌') + '</button>' +
+          '<a class="abtn" href="' + esc(n.link) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Abrir</a>' +
           '<div class="sw">' +
-            '<button class="abtn" onclick="toggleShare(this)">↗</button>' +
+            '<button class="abtn" onclick="event.stopPropagation();toggleShare(this)">⋯</button>' +
             '<div class="smenu">' +
-              '<a class="sopt" href="https://wa.me/?text=' + enc(n.title+' '+n.link) + '" target="_blank"><span>📱</span>WhatsApp</a>' +
-              '<a class="sopt" href="https://t.me/share/url?url=' + enc(n.link) + '&text=' + enc(n.title) + '" target="_blank"><span>✈️</span>Telegram</a>' +
-              '<a class="sopt" href="https://twitter.com/intent/tweet?text=' + enc(n.title) + '&url=' + enc(n.link) + '" target="_blank"><span>𝕏</span>Twitter/X</a>' +
-              '<a class="sopt" href="https://www.linkedin.com/sharing/share-offsite/?url=' + enc(n.link) + '" target="_blank"><span>💼</span>LinkedIn</a>' +
-              '<div class="sopt" onclick="copyLink(\'' + esc(n.link) + '\')"><span>📋</span>Copiar enlace</div>' +
-              '<a class="sopt" href="mailto:?subject=' + enc(n.title) + '&body=' + enc(n.link) + '"><span>📧</span>Email</a>' +
+              '<a class="sopt" href="https://wa.me/?text=' + enc(n.title+' '+n.link) + '" target="_blank" onclick="event.stopPropagation()"><span>📱</span>WhatsApp</a>' +
+              '<a class="sopt" href="https://t.me/share/url?url=' + enc(n.link) + '&text=' + enc(n.title) + '" target="_blank" onclick="event.stopPropagation()"><span>✈️</span>Telegram</a>' +
+              '<a class="sopt" href="https://twitter.com/intent/tweet?text=' + enc(n.title) + '&url=' + enc(n.link) + '" target="_blank" onclick="event.stopPropagation()"><span>𝕏</span>Twitter/X</a>' +
+              '<a class="sopt" href="https://www.linkedin.com/sharing/share-offsite/?url=' + enc(n.link) + '" target="_blank" onclick="event.stopPropagation()"><span>💼</span>LinkedIn</a>' +
+              '<div class="sopt" onclick="event.stopPropagation();copyLink(\'' + esc(n.link) + '\')"><span>📋</span>Copiar enlace</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -383,122 +487,184 @@ function cardHTML(n, i) {
   '</div>';
 }
 
-// ── CHIPS ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// ABRIR ARTÍCULO — lector interno + marcar como leída
+// ─────────────────────────────────────────────────────────────────
+function openArticle(id) {
+  var n = null;
+  for (var i = 0; i < NEWS.length; i++) { if (NEWS[i].id === id) { n = NEWS[i]; break; } }
+  if (!n) return;
+
+  // Marcar como leída
+  if (READ.indexOf(id) === -1) {
+    READ.push(id);
+    lsSet(READ_KEY, READ);
+    // Actualizar visual
+    var cards = document.querySelectorAll('.card');
+    for (var j = 0; j < cards.length; j++) {
+      if (cards[j].getAttribute('onclick') && cards[j].getAttribute('onclick').indexOf(id) !== -1) {
+        cards[j].classList.add('read');
+      }
+    }
+  }
+
+  // Abrir lector
+  document.getElementById('rsource').textContent = n.sn;
+  document.getElementById('rsource').style.color = n.sc;
+  document.getElementById('rtitle').textContent  = n.title;
+  document.getElementById('rlink').href          = n.link;
+
+  var frame = document.getElementById('rframe');
+  frame.src = n.link;
+
+  document.getElementById('rov').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReader() {
+  document.getElementById('rov').classList.remove('open');
+  document.getElementById('rframe').src = 'about:blank';
+  document.body.style.overflow = '';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CHIPS DE FUENTES
+// ─────────────────────────────────────────────────────────────────
 function renderChips() {
-  var html = SRCS.map(function(s) {
-    return '<div class="src-chip" onclick="removeSource(\'' + s.id + '\')" title="Eliminar ' + s.n + '">' +
-      '<span class="src-dot" style="background:' + s.c + '"></span>' +
+  var html = '';
+  for (var i = 0; i < SRCS.length; i++) {
+    var s = SRCS[i];
+    html += '<div class="chip" onclick="removeSource(\'' + s.id + '\')" title="Pulsa para eliminar">' +
+      '<span class="cdot" style="background:' + s.c + '"></span>' +
       '<span>' + s.e + ' ' + s.n + '</span>' +
-      '<span class="src-x">✕</span>' +
+      '<span class="cx">✕</span>' +
     '</div>';
-  }).join('');
-  html += '<div class="add-chip" onclick="openModal()">➕ Añadir fuente</div>';
-  document.getElementById('src-chips').innerHTML = html;
+  }
+  html += '<div class="addchip" onclick="openModal()">➕ Añadir fuente</div>';
+  document.getElementById('chips').innerHTML = html;
 }
 
 function removeSource(id) {
-  var src = SRCS.find(function(s){ return s.id === id; });
+  var src = null;
+  for (var i = 0; i < SRCS.length; i++) { if (SRCS[i].id === id) { src = SRCS[i]; break; } }
   if (!src) return;
   if (!confirm('¿Eliminar "' + src.n + '"?')) return;
   SRCS = SRCS.filter(function(s){ return s.id !== id; });
   NEWS = NEWS.filter(function(n){ return n.si !== id; });
-  saveSrcs(); renderChips(); applyF();
-  showToast('"' + src.n + '" eliminada');
+  lsSet(STORE_KEY, SRCS);
+  renderChips(); applyF();
+  toast('"' + src.n + '" eliminada');
 }
 
-// ── BÚSQUEDA EN MODAL ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// BÚSQUEDA EN MODAL
+// ─────────────────────────────────────────────────────────────────
 function onQ(val) {
   clearTimeout(QT);
   var q = val.trim().toLowerCase();
   var res = document.getElementById('mres');
   if (!q) { res.classList.remove('show'); res.innerHTML = ''; return; }
+
   var matches = KNOWN.filter(function(f) {
-    return (f.n.toLowerCase().includes(q) || f.t.some(function(t){ return t.includes(q); }))
-      && !SRCS.find(function(s){ return s.u === f.u; });
+    var inName = f.n.toLowerCase().indexOf(q) !== -1;
+    var inTags = f.t.some(function(t){ return t.indexOf(q) !== -1; });
+    var alreadyAdded = SRCS.some(function(s){ return s.u === f.u; });
+    return (inName || inTags) && !alreadyAdded;
   });
+
   if (matches.length) {
-    showMResults(matches);
+    showMRes(matches);
   } else {
     res.classList.add('show');
-    res.innerHTML = '<div class="mmsg">Generando feed para "' + val + '"...</div>';
-    QT = setTimeout(function(){ buildAuto(val); }, 500);
+    res.innerHTML = '<div class="mmsg">No encontrado en la lista. Usa la URL directamente.</div>';
   }
 }
 
-function showMResults(feeds) {
+function showMRes(feeds) {
   var res = document.getElementById('mres');
   res._f = feeds;
   res.classList.add('show');
-  res.innerHTML = feeds.map(function(f, i) {
-    return '<div class="mri" onclick="selFeed(' + i + ')">' +
+  var html = '';
+  for (var i = 0; i < feeds.length; i++) {
+    var f = feeds[i];
+    html += '<div class="mri" onclick="selFeed(' + i + ')">' +
       '<div class="mri-top">' +
         '<span>' + f.e + '</span>' +
         '<span class="mri-name">' + f.n + '</span>' +
         '<span class="mri-tag">' + (f.t[0]||'') + '</span>' +
       '</div>' +
-      '<div class="mri-url">Google News · ' + f.n + '</div>' +
+      '<div class="mri-url">' + f.u.replace('https://','').slice(0,55) + '</div>' +
     '</div>';
-  }).join('');
+  }
+  res.innerHTML = html;
 }
 
 function selFeed(i) {
-  var f = document.getElementById('mres')._f;
-  if (!f || !f[i]) return;
-  addFeed(f[i]);
+  var feeds = document.getElementById('mres')._f;
+  if (!feeds || !feeds[i]) return;
+  addFeed(feeds[i]);
   closeModal();
 }
 
-function buildAuto(query) {
-  var slug = query.toLowerCase().replace(/\s+/g,'');
-  var feeds = [
-    {n: query.charAt(0).toUpperCase()+query.slice(1), e:'📰', c:'#d4a843',
-     t:['bolsa','macro','empresa'],
-     u:'https://news.google.com/rss/search?q=when:24h+allinurl:' + encodeURIComponent(slug) + '.com&hl=es&gl=ES&ceid=ES:es'},
-    {n: query.charAt(0).toUpperCase()+query.slice(1) + ' (todas)', e:'🔍', c:'#8b92a8',
-     t:['bolsa','macro','empresa'],
-     u:'https://news.google.com/rss/search?q=when:24h+' + encodeURIComponent(query) + '&hl=es&gl=ES&ceid=ES:es'},
-  ].filter(function(f){ return !SRCS.find(function(s){ return s.u===f.u; }); });
-  showMResults(feeds);
-}
-
-// ── AÑADIR FUENTE ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// AÑADIR / GUARDAR FUENTE
+// ─────────────────────────────────────────────────────────────────
 function addFeed(f) {
-  if (SRCS.find(function(s){ return s.u === f.u; })) { showToast('Ya está añadida'); return; }
-  var id = 's' + Date.now();
-  SRCS.push({id:id, n:f.n, u:f.u, e:f.e||'📰', c:f.c||'#d4a843', t:f.t||['bolsa','macro','empresa']});
-  saveSrcs(); renderChips();
-  showToast('✓ "' + f.n + '" añadida');
+  var alreadyAdded = SRCS.some(function(s){ return s.u === f.u; });
+  if (alreadyAdded) { toast('Ya está añadida'); return; }
+  var src = {
+    id: 'src' + Date.now(),
+    n: f.n, u: f.u,
+    e: f.e || '📰',
+    c: f.c || '#d4a843',
+    t: f.t || ['bolsa','macro','empresa']
+  };
+  SRCS.push(src);
+  lsSet(STORE_KEY, SRCS);  // guardar inmediatamente
+  renderChips();
+  toast('✓ "' + f.n + '" añadida — pulsa Actualizar');
 }
 
 function addManual() {
   var url  = document.getElementById('mu').value.trim();
   var name = document.getElementById('mn').value.trim();
-  if (!url || !name) { showToast('⚠ URL y nombre obligatorios'); return; }
+  if (!url || !name) { toast('⚠ URL y nombre son obligatorios'); return; }
   addFeed({n:name, u:url, e:'📰', c:'#d4a843', t:['bolsa','macro','empresa']});
   closeModal();
 }
 
-function saveSrcs() { localStorage.setItem('mp4_s', JSON.stringify(SRCS)); }
-
-// ── GUARDAR ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// GUARDAR NOTICIAS
+// ─────────────────────────────────────────────────────────────────
 function toggleSave(id, btn) {
   var i = SAVED.indexOf(id);
-  if (i === -1) { SAVED.push(id); btn.innerHTML='🔖'; btn.classList.add('sv'); showToast('Guardada 🔖'); }
-  else          { SAVED.splice(i,1); btn.innerHTML='📌'; btn.classList.remove('sv'); showToast('Eliminada'); }
-  localStorage.setItem('mp4_sv', JSON.stringify(SAVED));
+  if (i === -1) {
+    SAVED.push(id);
+    btn.innerHTML = '🔖'; btn.classList.add('sv');
+    toast('Guardada 🔖');
+  } else {
+    SAVED.splice(i, 1);
+    btn.innerHTML = '📌'; btn.classList.remove('sv');
+    toast('Eliminada de guardadas');
+  }
+  lsSet(SAVED_KEY, SAVED);
 }
 
-// ── MODAL ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────────────────────────
 function openModal() {
   document.getElementById('ov').classList.add('open');
   document.getElementById('mq').value = '';
-  document.getElementById('mres').classList.remove('show');
-  document.getElementById('mres').innerHTML = '';
+  var res = document.getElementById('mres');
+  res.classList.remove('show'); res.innerHTML = '';
   setTimeout(function(){ document.getElementById('mq').focus(); }, 200);
 }
 function closeModal() { document.getElementById('ov').classList.remove('open'); }
 
-// ── COMPARTIR ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// COMPARTIR
+// ─────────────────────────────────────────────────────────────────
 function toggleShare(btn) {
   var m = btn.nextElementSibling;
   var was = m.classList.contains('open');
@@ -506,26 +672,38 @@ function toggleShare(btn) {
   if (!was) m.classList.add('open');
 }
 function copyLink(url) {
-  navigator.clipboard.writeText(url).then(function(){ showToast('Enlace copiado ✓'); });
+  try {
+    navigator.clipboard.writeText(url).then(function(){ toast('Enlace copiado ✓'); });
+  } catch(e) {
+    toast('Enlace: ' + url);
+  }
   document.querySelectorAll('.smenu.open').forEach(function(m){ m.classList.remove('open'); });
 }
 
-// ── UTILS ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────
 function relTime(d) {
+  if (!d) return '';
   var s = (Date.now() - new Date(d)) / 1000;
-  if (isNaN(s)||s<0) return '';
-  if (s<60)    return 'Ahora';
-  if (s<3600)  return 'Hace ' + Math.floor(s/60) + 'm';
-  if (s<86400) return 'Hace ' + Math.floor(s/3600) + 'h';
+  if (isNaN(s) || s < 0) return '';
+  if (s < 60)    return 'Ahora';
+  if (s < 3600)  return 'Hace ' + Math.floor(s/60) + 'm';
+  if (s < 86400) return 'Hace ' + Math.floor(s/3600) + 'h';
   return 'Hace ' + Math.floor(s/86400) + 'd';
 }
-function showToast(msg) {
+function toast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
 }
 </script>
 </body>
