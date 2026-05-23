@@ -1,538 +1,400 @@
-// Almacenamiento
-let fuentes = [];
-let noticias = [];
-let leidas = new Set();
-let actualizando = false;
+// Claves de localStorage
+const STORAGE_SOURCES = 'news_sources_v2';
+const STORAGE_ARTICLES = 'news_articles_v2';
+const STORAGE_READ = 'news_read_ids_v2';
+
+// Estado
+let sources = [];
+let allArticles = [];
+let readArticleIds = new Set();
+let isLoading = false;
+
+// DOM Elements
+const sourcesListDiv = document.getElementById('sourcesList');
+const newsListDiv = document.getElementById('newsList');
+const newSourceUrlInput = document.getElementById('newSourceUrl');
+const newSourceNameInput = document.getElementById('newSourceName');
+const addSourceBtn = document.getElementById('addSourceBtn');
+const fetchAllBtn = document.getElementById('fetchAllBtn');
+const markAllReadBtn = document.getElementById('markAllReadBtn');
+const clearReadBtn = document.getElementById('clearReadBtn');
 
 // Cargar datos guardados
-function cargarDatos() {
-    const fuentesGuardadas = localStorage.getItem('anduimRSS_fuentes');
-    const noticiasGuardadas = localStorage.getItem('anduimRSS_noticias');
-    const leidasGuardadas = localStorage.getItem('anduimRSS_leidas');
+function loadData() {
+    const savedSources = localStorage.getItem(STORAGE_SOURCES);
+    if (savedSources) sources = JSON.parse(savedSources);
     
-    if (fuentesGuardadas) fuentes = JSON.parse(fuentesGuardadas);
-    if (noticiasGuardadas) noticias = JSON.parse(noticiasGuardadas);
-    if (leidasGuardadas) leidas = new Set(JSON.parse(leidasGuardadas));
+    const savedArticles = localStorage.getItem(STORAGE_ARTICLES);
+    if (savedArticles) allArticles = JSON.parse(savedArticles);
     
-    renderizarFuentes();
-    renderizarNoticias();
+    const savedRead = localStorage.getItem(STORAGE_READ);
+    if (savedRead) readArticleIds = new Set(JSON.parse(savedRead));
+    
+    renderSources();
+    renderNews();
+    
+    // Si no hay noticias y hay fuentes, auto-actualizar
+    if (sources.length > 0 && allArticles.length === 0) {
+        setTimeout(() => fetchAllNews(), 500);
+    }
 }
 
-function guardarFuentes() { localStorage.setItem('anduimRSS_fuentes', JSON.stringify(fuentes)); }
-function guardarNoticias() { localStorage.setItem('anduimRSS_noticias', JSON.stringify(noticias)); }
-function guardarLeidas() { localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas])); }
-
-// Añadir fuente
-function añadirFuente() {
-    const nombre = document.getElementById('sourceName').value.trim();
-    let url = document.getElementById('sourceRss').value.trim();
-    
-    if (!nombre || !url) {
-        mostrarMensaje('❌ Completa ambos campos', true);
-        return;
-    }
-    
-    if (!url.startsWith('http')) url = 'https://' + url;
-    
-    fuentes.push({ nombre, url });
-    guardarFuentes();
-    renderizarFuentes();
-    
-    document.getElementById('sourceName').value = '';
-    document.getElementById('sourceRss').value = '';
-    mostrarMensaje(`✅ Fuente "${nombre}" añadida`);
+function saveSources() {
+    localStorage.setItem(STORAGE_SOURCES, JSON.stringify(sources));
 }
 
-function renderizarFuentes() {
-    const container = document.getElementById('sourcesList');
-    
-    if (fuentes.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-secondary); padding: 10px 0;">📭 No hay fuentes. Añade una web o RSS.</div>';
+function saveArticles() {
+    localStorage.setItem(STORAGE_ARTICLES, JSON.stringify(allArticles));
+}
+
+function saveReadIds() {
+    localStorage.setItem(STORAGE_READ, JSON.stringify([...readArticleIds]));
+}
+
+function renderSources() {
+    if (sources.length === 0) {
+        sourcesListDiv.innerHTML = '<div style="color:#64748b">➕ Añade tu primera URL arriba</div>';
         return;
     }
-    
-    container.innerHTML = fuentes.map((f, i) => `
+    sourcesListDiv.innerHTML = sources.map((src, idx) => `
         <div class="source-tag">
-            <span>📌 ${escapeHtml(f.nombre)}</span>
-            <button onclick="eliminarFuente(${i})">✖</button>
+            <span>📄 ${escapeHtml(src.name)}</span>
+            <button data-index="${idx}" class="remove-source">✖</button>
         </div>
     `).join('');
-}
-
-function eliminarFuente(index) {
-    const nombre = fuentes[index].nombre;
-    fuentes.splice(index, 1);
-    guardarFuentes();
-    renderizarFuentes();
-    mostrarMensaje(`🗑️ Fuente "${nombre}" eliminada`);
-}
-
-// 🔥 NUEVO: Detectar si es RSS o web normal
-function esRssUrl(url) {
-    return url.toLowerCase().includes('.xml') || 
-           url.toLowerCase().includes('/rss') ||
-           url.toLowerCase().includes('/feed');
-}
-
-// 🔥 NUEVO: Extraer noticias desde HTML normal (como las primeras versiones)
-async function extraerDesdeHTML(url, nombreFuente) {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    try {
-        const response = await fetch(proxyUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await response.json();
-        const html = data.contents;
-        
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Buscar artículos con selectores comunes
-        const selectores = [
-            'article', '.article', '.noticia', '.news-item', '.post', 
-            '.entry', '.card', '.story', '[data-article]'
-        ];
-        
-        let items = [];
-        for (const sel of selectores) {
-            const encontrados = doc.querySelectorAll(sel);
-            if (encontrados.length > 0) {
-                items = encontrados;
-                break;
-            }
-        }
-        
-        // Fallback: buscar enlaces con títulos grandes
-        if (items.length === 0) {
-            const enlaces = doc.querySelectorAll('a');
-            items = Array.from(enlaces).filter(a => {
-                const texto = a.textContent.trim();
-                return texto.length > 20 && texto.length < 200 && a.href;
-            });
-        }
-        
-        const noticiasFuente = [];
-        const maxItems = Math.min(items.length, 25);
-        
-        for (let idx = 0; idx < maxItems; idx++) {
-            const item = items[idx];
-            
-            // Extraer título
-            let titulo = '';
-            const tituloElem = item.querySelector('h1, h2, h3, h4, .title, .headline');
-            if (tituloElem) titulo = tituloElem.textContent.trim();
-            if (!titulo && item.textContent) titulo = item.textContent.trim().slice(0, 100);
-            if (!titulo || titulo.length < 15) continue;
-            
-            // Extraer enlace
-            let enlace = '';
-            const linkElem = item.querySelector('a');
-            if (linkElem && linkElem.href) enlace = linkElem.href;
-            else if (item.href) enlace = item.href;
-            
-            if (enlace && enlace.startsWith('/')) {
-                try {
-                    const baseUrl = new URL(url);
-                    enlace = baseUrl.origin + enlace;
-                } catch(e) {}
-            }
-            
-            if (!enlace || !enlace.startsWith('http')) continue;
-            
-            // Extraer imagen
-            let imagen = '';
-            const imgElem = item.querySelector('img');
-            if (imgElem && imgElem.src) {
-                imagen = imgElem.src;
-                if (imagen.startsWith('/')) {
-                    try {
-                        const baseUrl = new URL(url);
-                        imagen = baseUrl.origin + imagen;
-                    } catch(e) {}
-                }
-            }
-            
-            // Extraer descripción
-            let descripcion = '';
-            const descElem = item.querySelector('p, .summary, .description');
-            if (descElem) descripcion = descElem.textContent.trim().slice(0, 160);
-            if (!descripcion && titulo) descripcion = titulo.slice(0, 160);
-            
-            noticiasFuente.push({
-                id: `${enlace}_${idx}`,
-                titulo: titulo.slice(0, 100),
-                enlace: enlace,
-                descripcion: descripcion,
-                imagen: imagen || `https://placehold.co/600x400/1e1e1e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
-                fuente: nombreFuente,
-                fecha: new Date().toISOString(),
-                timestamp: Date.now()
-            });
-        }
-        
-        console.log(`✅ ${nombreFuente} (HTML): ${noticiasFuente.length} noticias`);
-        return noticiasFuente;
-        
-    } catch (error) {
-        console.warn(`❌ ${nombreFuente} (HTML): ${error.message}`);
-        return [];
-    }
-}
-
-// Extraer noticias desde RSS
-async function extraerDesdeRSS(rssUrl, nombreFuente) {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    try {
-        const response = await fetch(proxyUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await response.json();
-        const xmlText = data.contents;
-        
-        if (!xmlText || xmlText.length < 100) return [];
-        
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        
-        if (xmlDoc.querySelector('parsererror')) return [];
-        
-        let items = xmlDoc.querySelectorAll('item');
-        if (items.length === 0) items = xmlDoc.querySelectorAll('entry');
-        
-        if (items.length === 0) return [];
-        
-        const noticiasFuente = [];
-        const maxItems = Math.min(items.length, 25);
-        
-        for (let idx = 0; idx < maxItems; idx++) {
-            const item = items[idx];
-            
-            let titulo = '';
-            const titleElem = item.querySelector('title, titulo, headline');
-            if (titleElem) titulo = titleElem.textContent || titleElem.getAttribute('title');
-            if (!titulo && item.textContent) titulo = item.textContent.slice(0, 100);
-            titulo = (titulo || '').trim();
-            if (titulo.length < 8) continue;
-            
-            let enlace = '';
-            const linkElem = item.querySelector('link');
-            if (linkElem) enlace = linkElem.textContent || linkElem.getAttribute('href');
-            if (!enlace) {
-                const guid = item.querySelector('guid');
-                if (guid) enlace = guid.textContent;
-            }
-            if (!enlace) enlace = item.getAttribute('url') || item.getAttribute('href');
-            
-            if (enlace && enlace.startsWith('/')) {
-                try {
-                    const baseUrl = new URL(rssUrl);
-                    enlace = baseUrl.origin + enlace;
-                } catch(e) {}
-            }
-            
-            if (!enlace || enlace.length < 5) continue;
-            
-            let descripcion = '';
-            const descElem = item.querySelector('description, summary, content');
-            if (descElem) descripcion = descElem.textContent || '';
-            descripcion = descripcion.replace(/<[^>]*>/g, '').trim().slice(0, 160);
-            
-            let pubDate = '';
-            const dateElem = item.querySelector('pubDate, published, updated');
-            if (dateElem) pubDate = dateElem.textContent;
-            
-            let imagen = '';
-            const media = item.querySelector('media\\:content, content, enclosure');
-            if (media) imagen = media.getAttribute('url') || media.getAttribute('src');
-            if (!imagen) {
-                const imgMatch = descripcion.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i);
-                if (imgMatch) imagen = imgMatch[0];
-            }
-            
-            noticiasFuente.push({
-                id: `${enlace}_${idx}`,
-                titulo: titulo.slice(0, 100),
-                enlace: enlace,
-                descripcion: descripcion || titulo.slice(0, 100),
-                imagen: imagen || `https://placehold.co/600x400/1e1e1e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
-                fuente: nombreFuente,
-                fecha: pubDate,
-                timestamp: new Date(pubDate || Date.now()).getTime()
-            });
-        }
-        
-        console.log(`✅ ${nombreFuente} (RSS): ${noticiasFuente.length} noticias`);
-        return noticiasFuente;
-        
-    } catch (error) {
-        console.warn(`❌ ${nombreFuente} (RSS): ${error.message}`);
-        return [];
-    }
-}
-
-// 🔥 NUEVO: Obtener noticias (decide automáticamente el método)
-async function obtenerNoticias(url, nombreFuente) {
-    // Si parece RSS, usar método RSS
-    if (esRssUrl(url)) {
-        const noticias = await extraerDesdeRSS(url, nombreFuente);
-        if (noticias.length > 0) return noticias;
-        // Si falla RSS, intentar como HTML
-        return await extraerDesdeHTML(url, nombreFuente);
-    } 
-    // Si es web normal, probar HTML primero
-    else {
-        const noticias = await extraerDesdeHTML(url, nombreFuente);
-        if (noticias.length > 0) return noticias;
-        // Si falla HTML, intentar buscar RSS automáticamente
-        return await extraerDesdeRSS(url, nombreFuente);
-    }
-}
-
-// Actualizar todas las fuentes en paralelo
-async function actualizarTodo() {
-    if (fuentes.length === 0) {
-        mostrarMensaje('📌 Primero añade alguna fuente', true);
-        return;
-    }
-    
-    if (actualizando) {
-        mostrarMensaje('⏳ Ya está actualizando...', true);
-        return;
-    }
-    
-    actualizando = true;
-    const container = document.getElementById('newsContainer');
-    container.innerHTML = '<div class="loading-state">🔄 Cargando ' + fuentes.length + ' fuentes...</div>';
-    
-    const promesas = fuentes.map(fuente => obtenerNoticias(fuente.url, fuente.nombre));
-    const resultados = await Promise.all(promesas);
-    
-    let todasLasNoticias = [];
-    const fuentesConNoticias = [];
-    
-    for (let i = 0; i < resultados.length; i++) {
-        if (resultados[i].length > 0) {
-            todasLasNoticias.push(...resultados[i]);
-            fuentesConNoticias.push(fuentes[i].nombre);
-        }
-    }
-    
-    const fuentesFallidas = fuentes.filter(f => !fuentesConNoticias.includes(f.nombre));
-    if (fuentesFallidas.length > 0) {
-        const nombres = fuentesFallidas.map(f => f.nombre).join(', ');
-        mostrarMensaje(`⚠️ Sin noticias: ${nombres}`, true);
-    }
-    
-    const noticiasUnicas = [];
-    const enlacesVistos = new Set();
-    for (const noticia of todasLasNoticias) {
-        if (!enlacesVistos.has(noticia.enlace)) {
-            enlacesVistos.add(noticia.enlace);
-            noticiasUnicas.push(noticia);
-        }
-    }
-    
-    noticiasUnicas.sort((a, b) => b.timestamp - a.timestamp);
-    
-    noticias = noticiasUnicas;
-    guardarNoticias();
-    renderizarNoticias();
-    
-    actualizando = false;
-    mostrarMensaje(`✨ ${noticias.length} noticias de ${fuentesConNoticias.length}/${fuentes.length} fuentes`);
-}
-
-function renderizarNoticias() {
-    const container = document.getElementById('newsContainer');
-    
-    if (noticias.length === 0) {
-        container.innerHTML = '<div class="empty-state">📭 No hay noticias. Haz clic en "Actualizar todas".</div>';
-        return;
-    }
-    
-    const noLeidas = noticias.filter(n => !leidas.has(n.id)).length;
-    document.title = noLeidas > 0 ? `(${noLeidas}) anduimRSS` : 'anduimRSS';
-    
-    const noticiasMostradas = noticias.slice(0, 50);
-    
-    container.innerHTML = `
-        <div class="news-stats">📊 ${noticias.length} noticias · ✨ ${noLeidas} sin leer</div>
-        <div class="news-grid">
-            ${noticiasMostradas.map(noticia => `
-                <div class="news-card ${leidas.has(noticia.id) ? 'read' : ''}" data-url="${noticia.enlace}" data-id="${noticia.id}">
-                    <img class="news-image" src="${noticia.imagen}" alt="${escapeHtml(noticia.titulo)}" onerror="this.src='https://placehold.co/130x130/1e1e1e/667eea?text=📰'">
-                    <div class="news-content">
-                        <div>
-                            <div class="news-title">${escapeHtml(noticia.titulo)}</div>
-                            <div class="news-description">${escapeHtml(noticia.descripcion)}</div>
-                        </div>
-                        <div class="news-meta">
-                            <span class="news-source">📌 ${escapeHtml(noticia.fuente)}</span>
-                            <span class="news-date">${formatearFechaHora(noticia.fecha)}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-        ${noticias.length > 50 ? `<div style="text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 12px;">📌 Mostrando las 50 más recientes de ${noticias.length}</div>` : ''}
-    `;
-    
-    document.querySelectorAll('.news-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const id = card.dataset.id;
-            const url = card.dataset.url;
-            
-            if (!leidas.has(id)) {
-                leidas.add(id);
-                guardarLeidas();
-                card.classList.add('read');
-                renderizarNoticias();
-            }
-            window.open(url, '_blank');
+    document.querySelectorAll('.remove-source').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(btn.dataset.index);
+            removeSource(idx);
         });
     });
 }
 
-function marcarTodoLeido() {
-    if (noticias.length === 0) return;
-    noticias.forEach(n => leidas.add(n.id));
-    guardarLeidas();
-    renderizarNoticias();
-    mostrarMensaje('✅ Todas marcadas como leídas');
+function removeSource(index) {
+    sources.splice(index, 1);
+    saveSources();
+    renderSources();
+    allArticles = [];
+    saveArticles();
+    renderNews();
 }
 
-function limpiarLeidos() {
-    if (noticias.length === 0) return;
-    const leidasCount = noticias.filter(n => leidas.has(n.id)).length;
-    noticias = noticias.filter(n => !leidas.has(n.id));
-    leidas.clear();
-    guardarNoticias();
-    guardarLeidas();
-    renderizarNoticias();
-    mostrarMensaje(`🗑️ ${leidasCount} noticias leídas eliminadas`);
-}
-
-function exportarFuentes() {
-    if (fuentes.length === 0) {
-        mostrarMensaje('No hay fuentes para exportar', true);
+function addSource() {
+    const url = newSourceUrlInput.value.trim();
+    let name = newSourceNameInput.value.trim();
+    if (!url) {
+        alert('Por favor, introduce una URL válida');
         return;
     }
-    const data = JSON.stringify(fuentes, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `anduimRSS_fuentes_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    mostrarMensaje('✅ Fuentes exportadas');
-}
-
-function importarFuentes() {
-    const input = document.getElementById('importFile');
-    input.click();
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const fuentesImportadas = JSON.parse(event.target.result);
-                if (Array.isArray(fuentesImportadas) && fuentesImportadas.every(f => f.nombre && f.url)) {
-                    fuentes = fuentesImportadas;
-                    guardarFuentes();
-                    renderizarFuentes();
-                    mostrarMensaje(`✅ Importadas ${fuentes.length} fuentes`);
-                } else {
-                    mostrarMensaje('❌ Archivo inválido', true);
-                }
-            } catch (error) {
-                mostrarMensaje('❌ Error al leer el archivo', true);
-            }
-        };
-        reader.readAsText(file);
-    };
-}
-
-function formatearFechaHora(fechaStr) {
-    if (!fechaStr) return 'Fecha?';
+    
     try {
-        const fecha = new Date(fechaStr);
-        if (isNaN(fecha.getTime())) return 'Fecha?';
-        
-        const ahora = new Date();
-        const diff = ahora - fecha;
-        const minutos = Math.floor(diff / 60000);
-        const horas = Math.floor(diff / 3600000);
-        const dias = Math.floor(diff / 86400000);
-        
-        const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        
-        if (minutos < 1) return `Ahora (${horaStr})`;
-        if (minutos < 60) return `Hace ${minutos}m (${horaStr})`;
-        if (horas < 24) return `Hace ${horas}h (${horaStr})`;
-        if (dias < 7) return `${fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} ${horaStr}`;
-        
-        return fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + ` ${horaStr}`;
-    } catch {
-        return fechaStr;
+        new URL(url);
+    } catch(e) {
+        alert('URL no válida. Ejemplo: https://example.com');
+        return;
     }
+    
+    if (!name) {
+        try {
+            name = new URL(url).hostname.replace('www.', '');
+        } catch(e) {
+            name = 'Fuente';
+        }
+    }
+    
+    sources.push({ url, name });
+    saveSources();
+    renderSources();
+    newSourceUrlInput.value = '';
+    newSourceNameInput.value = '';
+    
+    // Actualizar noticias automáticamente
+    fetchAllNews();
 }
 
-function mostrarMensaje(mensaje, esError = false) {
-    const msgDiv = document.createElement('div');
-    msgDiv.textContent = mensaje;
-    msgDiv.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        left: 20px;
-        max-width: 350px;
-        margin: 0 auto;
-        background: ${esError ? '#f56565' : '#48bb78'};
-        color: white;
-        padding: 10px 16px;
-        border-radius: 12px;
-        text-align: center;
-        z-index: 1000;
-        animation: fadeInOut 3s ease;
-        font-size: 13px;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    `;
-    document.body.appendChild(msgDiv);
-    setTimeout(() => msgDiv.remove(), 3000);
+async function fetchNewsFromSource(source) {
+    // Múltiples proxies para redundancia
+    const proxies = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(source.url)}`,
+        `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(source.url)}`
+    ];
+    
+    let html = null;
+    let lastError = null;
+    
+    // Intentar con cada proxy hasta que uno funcione
+    for (const proxy of proxies) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos timeout
+            
+            const response = await fetch(proxy, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                html = data.contents || data;
+                if (html && html.length > 1000) break;
+            }
+        } catch (err) {
+            lastError = err;
+            continue;
+        }
+    }
+    
+    if (!html) {
+        console.error(`No se pudo cargar ${source.url}:`, lastError);
+        return [];
+    }
+    
+    // Extraer artículos
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const articles = [];
+    const seenLinks = new Set();
+    
+    // Método 1: Buscar elementos que parecen artículos
+    const selectors = [
+        'article', '.post', '.entry', '.news-item', '.card', 
+        '.noticia', '.story', '.item', '.article', '[role="article"]',
+        '.blog-post', '.post-item', '.feed-item'
+    ];
+    
+    let candidates = [];
+    for (const selector of selectors) {
+        candidates = doc.querySelectorAll(selector);
+        if (candidates.length > 0) break;
+    }
+    
+    if (candidates.length > 0) {
+        candidates.forEach((el, idx) => {
+            const link = el.querySelector('a[href]');
+            if (!link) return;
+            
+            let urlLink = link.href;
+            if (urlLink && !urlLink.startsWith('http')) {
+                try {
+                    urlLink = new URL(urlLink, source.url).href;
+                } catch(e) { return; }
+            }
+            
+            if (seenLinks.has(urlLink)) return;
+            seenLinks.add(urlLink);
+            
+            // Título
+            let title = '';
+            const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.headline', '.post-title'];
+            for (const ts of titleSelectors) {
+                const titleEl = el.querySelector(ts);
+                if (titleEl && titleEl.innerText.trim().length > 5) {
+                    title = titleEl.innerText.trim();
+                    break;
+                }
+            }
+            if (!title && link.innerText.trim().length > 5) title = link.innerText.trim();
+            if (!title || title.length < 5) return;
+            
+            // Imagen
+            let imgUrl = '';
+            const img = el.querySelector('img');
+            if (img && img.src) {
+                imgUrl = img.src;
+                if (imgUrl.startsWith('//')) imgUrl = 'https:' + imgUrl;
+            }
+            
+            // Extracto
+            let summary = '';
+            const summarySelectors = ['p', '.excerpt', '.summary', '.description'];
+            for (const ss of summarySelectors) {
+                const p = el.querySelector(ss);
+                if (p && p.innerText.trim().length > 30) {
+                    summary = p.innerText.trim().slice(0, 200);
+                    break;
+                }
+            }
+            if (!summary && title) summary = title;
+            
+            articles.push({
+                id: `${source.name}-${urlLink}-${Date.now()}`,
+                title: title.slice(0, 100),
+                link: urlLink,
+                image: imgUrl,
+                summary: summary.slice(0, 180),
+                sourceName: source.name,
+                timestamp: Date.now() - (idx * 3600000) // orden variado
+            });
+        });
+    }
+    
+    // Método 2: Fallback - buscar enlaces con títulos grandes
+    if (articles.length < 3) {
+        const links = doc.querySelectorAll('a[href]');
+        links.forEach((link, idx) => {
+            if (articles.length >= 15) return;
+            
+            const text = link.innerText.trim();
+            const hasImage = link.querySelector('img');
+            const isProbablyArticle = text.length > 20 && text.length < 200 && !text.includes('●') && !text.includes('©');
+            
+            if (isProbablyArticle && !seenLinks.has(link.href)) {
+                let urlLink = link.href;
+                if (urlLink && !urlLink.startsWith('http')) {
+                    try {
+                        urlLink = new URL(urlLink, source.url).href;
+                    } catch(e) { return; }
+                }
+                seenLinks.add(urlLink);
+                
+                let imgUrl = '';
+                if (hasImage) {
+                    const img = link.querySelector('img');
+                    if (img && img.src) imgUrl = img.src;
+                }
+                
+                articles.push({
+                    id: `${source.name}-${urlLink}-${idx}`,
+                    title: text.slice(0, 90),
+                    link: urlLink,
+                    image: imgUrl,
+                    summary: text.slice(0, 150),
+                    sourceName: source.name,
+                    timestamp: Date.now() - (idx * 1800000)
+                });
+            }
+        });
+    }
+    
+    // Limitar por fuente
+    return articles.slice(0, 12);
+}
+
+async function fetchAllNews() {
+    if (isLoading) return;
+    isLoading = true;
+    fetchAllBtn.disabled = true;
+    fetchAllBtn.textContent = '⏳ Cargando...';
+    
+    newsListDiv.innerHTML = '<div class="loading">🔍 Buscando noticias en todas las fuentes...<br><small>Esto puede tomar unos segundos</small></div>';
+    
+    let allNewArticles = [];
+    
+    for (const source of sources) {
+        try {
+            const articles = await fetchNewsFromSource(source);
+            allNewArticles.push(...articles);
+            await new Promise(r => setTimeout(r, 200));
+        } catch (error) {
+            console.error(`Error con ${source.name}:`, error);
+        }
+    }
+    
+    // Eliminar duplicados por link
+    const unique = [];
+    const seen = new Set();
+    for (const art of allNewArticles) {
+        if (!seen.has(art.link)) {
+            seen.add(art.link);
+            unique.push(art);
+        }
+    }
+    
+    if (unique.length === 0) {
+        // Mostrar noticias de ejemplo si no hay resultados
+        newsListDiv.innerHTML = '<div class="no-news">⚠️ No se encontraron noticias. Prueba con otra web (ej: un blog o medio de noticias).<br><br>📌 Ejemplo: https://www.elmundo.es</div>';
+    } else {
+        allArticles = unique.sort((a,b) => b.timestamp - a.timestamp);
+        saveArticles();
+        renderNews();
+    }
+    
+    isLoading = false;
+    fetchAllBtn.disabled = false;
+    fetchAllBtn.textContent = '🔄 Actualizar todas';
+}
+
+function renderNews() {
+    if (allArticles.length === 0) {
+        newsListDiv.innerHTML = '<div class="no-news">📭 Sin noticias. Añade fuentes y pulsa "Actualizar todas".</div>';
+        return;
+    }
+    
+    newsListDiv.innerHTML = allArticles.map(article => `
+        <div class="news-card ${readArticleIds.has(article.id) ? 'read' : ''}" data-id="${article.id}" data-link="${article.link}">
+            ${article.image ? `<img class="news-img" src="${article.image}" alt="img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : ''}
+            <div class="news-img" style="background:#e2e8f0; display:${article.image ? 'none' : 'flex'}; align-items:center; justify-content:center; font-size:2rem;">
+                📰
+            </div>
+            <div class="news-content">
+                <div class="news-title">${escapeHtml(article.title)}</div>
+                <div class="news-summary">${escapeHtml(article.summary)}</div>
+                <div class="news-source">📌 ${escapeHtml(article.sourceName)}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Event listeners
+    document.querySelectorAll('.news-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const id = card.dataset.id;
+            const link = card.dataset.link;
+            if (link) {
+                if (!readArticleIds.has(id)) {
+                    readArticleIds.add(id);
+                    saveReadIds();
+                    card.classList.add('read');
+                }
+                window.open(link, '_blank');
+            }
+        });
+    });
+}
+
+function markAllRead() {
+    allArticles.forEach(art => readArticleIds.add(art.id));
+    saveReadIds();
+    renderNews();
+}
+
+function clearReadNews() {
+    allArticles = allArticles.filter(art => !readArticleIds.has(art.id));
+    readArticleIds.clear();
+    saveArticles();
+    saveReadIds();
+    renderNews();
 }
 
 function escapeHtml(str) {
     if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(20px); }
-        15% { opacity: 1; transform: translateY(0); }
-        85% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(20px); }
-    }
-`;
-document.head.appendChild(style);
+// Event listeners
+addSourceBtn.addEventListener('click', addSource);
+fetchAllBtn.addEventListener('click', fetchAllNews);
+markAllReadBtn.addEventListener('click', markAllRead);
+clearReadBtn.addEventListener('click', clearReadNews);
 
-document.getElementById('addBtn').addEventListener('click', añadirFuente);
-document.getElementById('refreshBtn').addEventListener('click', actualizarTodo);
-document.getElementById('markReadBtn').addEventListener('click', marcarTodoLeido);
-document.getElementById('clearReadBtn').addEventListener('click', limpiarLeidos);
-document.getElementById('exportBtn').addEventListener('click', exportarFuentes);
-document.getElementById('importBtn').addEventListener('click', importarFuentes);
+// Inicializar
+loadData();
 
-cargarDatos();
+// Añadir fuentes de ejemplo si está vacío (para pruebas)
+if (sources.length === 0) {
+    setTimeout(() => {
+        if (confirm('¿Quieres añadir 2 fuentes de ejemplo para probar?')) {
+            sources.push(
+                { url: 'https://www.elmundo.es', name: 'El Mundo' },
+                { url: 'https://www.20minutos.es', name: '20 Minutos' }
+            );
+            saveSources();
+            renderSources();
+            fetchAllNews();
+        }
+    }, 500);
+}
