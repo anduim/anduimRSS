@@ -1,292 +1,266 @@
-// Storage keys
-const STORAGE_SOURCES = 'newsflow_sources';
-const STORAGE_ARTICLES = 'newsflow_articles';
-const STORAGE_READ = 'newsflow_read';
+// Almacenamiento
+let fuentes = [];
+let noticias = [];
+let leidas = new Set();
 
-let sources = [];
-let allArticles = [];
-let readIds = new Set();
-
-// DOM elements
-const sourcesListDiv = document.getElementById('sourcesList');
-const newsListDiv = document.getElementById('newsList');
-const newSourceUrl = document.getElementById('newSourceUrl');
-const newSourceName = document.getElementById('newSourceName');
-const addSourceBtn = document.getElementById('addSourceBtn');
-const fetchAllBtn = document.getElementById('fetchAllBtn');
-const markAllReadBtn = document.getElementById('markAllReadBtn');
-const clearReadBtn = document.getElementById('clearReadBtn');
-const modal = document.getElementById('addModal');
-const newsCountSpan = document.getElementById('newsCount');
-
-// Load saved data
-function loadData() {
-    const savedSources = localStorage.getItem(STORAGE_SOURCES);
-    if (savedSources) sources = JSON.parse(savedSources);
+// Cargar datos guardados al iniciar
+function cargarDatos() {
+    const fuentesGuardadas = localStorage.getItem('anduimRSS_fuentes');
+    const noticiasGuardadas = localStorage.getItem('anduimRSS_noticias');
+    const leidasGuardadas = localStorage.getItem('anduimRSS_leidas');
     
-    const savedArticles = localStorage.getItem(STORAGE_ARTICLES);
-    if (savedArticles) allArticles = JSON.parse(savedArticles);
+    if (fuentesGuardadas) fuentes = JSON.parse(fuentesGuardadas);
+    if (noticiasGuardadas) noticias = JSON.parse(noticiasGuardadas);
+    if (leidasGuardadas) leidas = new Set(JSON.parse(leidasGuardadas));
     
-    const savedRead = localStorage.getItem(STORAGE_READ);
-    if (savedRead) readIds = new Set(JSON.parse(savedRead));
-    
-    renderSources();
-    renderNews();
+    renderizarFuentes();
+    renderizarNoticias();
 }
 
-// Save functions
-function saveSources() { localStorage.setItem(STORAGE_SOURCES, JSON.stringify(sources)); }
-function saveArticles() { localStorage.setItem(STORAGE_ARTICLES, JSON.stringify(allArticles)); }
-function saveReadIds() { localStorage.setItem(STORAGE_READ, JSON.stringify([...readIds])); }
+function guardarFuentes() {
+    localStorage.setItem('anduimRSS_fuentes', JSON.stringify(fuentes));
+}
 
-// Render sources in sidebar
-function renderSources() {
-    if (sources.length === 0) {
-        sourcesListDiv.innerHTML = '<div class="empty-state-small"><i class="fas fa-plus-circle"></i><br>Añade tu primera fuente</div>';
+function guardarNoticias() {
+    localStorage.setItem('anduimRSS_noticias', JSON.stringify(noticias));
+}
+
+function guardarLeidas() {
+    localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas]));
+}
+
+// Añadir fuente
+function añadirFuente() {
+    const nombre = document.getElementById('sourceName').value.trim();
+    const rssUrl = document.getElementById('sourceRss').value.trim();
+    
+    if (!nombre || !rssUrl) {
+        mostrarNotificacion('Por favor, completa ambos campos', 'error');
         return;
     }
     
-    sourcesListDiv.innerHTML = sources.map((src, idx) => `
-        <div class="source-item">
-            <span class="source-name"><i class="fas fa-globe"></i> ${escapeHtml(src.name)}</span>
-            <button class="remove-source" data-index="${idx}"><i class="fas fa-trash"></i></button>
-        </div>
-    `).join('');
+    fuentes.push({ nombre, rss: rssUrl });
+    guardarFuentes();
+    renderizarFuentes();
     
-    document.querySelectorAll('.remove-source').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const idx = parseInt(btn.dataset.index);
-            sources.splice(idx, 1);
-            saveSources();
-            renderSources();
-            allArticles = allArticles.filter(art => !sources.some(s => s.name === art.sourceName));
-            saveArticles();
-            renderNews();
-        });
-    });
+    // Limpiar campos
+    document.getElementById('sourceName').value = '';
+    document.getElementById('sourceRss').value = '';
+    
+    mostrarNotificacion(`✅ Fuente "${nombre}" añadida correctamente`, 'success');
 }
 
-// Improved news extraction
-async function extractNewsFromUrl(source) {
-    const proxyUrls = [
-        `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`,
-        `https://cors-anywhere.herokuapp.com/${source.url}`
-    ];
+// Renderizar fuentes
+function renderizarFuentes() {
+    const container = document.getElementById('sourcesList');
     
-    for (const proxyUrl of proxyUrls) {
-        try {
-            const response = await fetch(proxyUrl);
-            const data = await response.json();
-            const html = data.contents || data;
+    if (fuentes.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📭 No hay fuentes aún. Añade algunas usando RSS.</div>';
+        return;
+    }
+    
+    container.innerHTML = fuentes.map((f, i) => `
+        <div class="source-tag">
+            <span>📌 ${escapeHtml(f.nombre)}</span>
+            <button onclick="eliminarFuente(${i})">✖</button>
+        </div>
+    `).join('');
+}
+
+function eliminarFuente(index) {
+    const fuenteEliminada = fuentes[index].nombre;
+    fuentes.splice(index, 1);
+    guardarFuentes();
+    renderizarFuentes();
+    mostrarNotificacion(`🗑️ Fuente "${fuenteEliminada}" eliminada`, 'info');
+}
+
+// Obtener RSS y convertirlo a JSON
+async function fetchRSS(rssUrl, nombreFuente) {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+    try {
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+        const xmlText = data.contents;
+        
+        // Parsear XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        
+        // Obtener items
+        const items = xmlDoc.querySelectorAll('item');
+        const noticiasFuente = [];
+        
+        items.forEach((item, idx) => {
+            const title = item.querySelector('title')?.textContent || '';
+            const link = item.querySelector('link')?.textContent || '';
+            let description = item.querySelector('description')?.textContent || '';
+            const pubDate = item.querySelector('pubDate')?.textContent || '';
             
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            // Limpiar HTML de la descripción
+            description = description.replace(/<[^>]*>/g, '').trim();
             
-            const articles = [];
+            // Extraer imagen
+            let imageUrl = '';
+            const mediaContent = item.querySelector('media\\:content, content');
+            if (mediaContent) imageUrl = mediaContent.getAttribute('url');
             
-            // Estrategias de extracción mejoradas
-            const selectors = [
-                'article', '.article', '.news-item', '.story', '.post',
-                '.node', '.item-list', '.list-item', '.card', '.noticia',
-                '[data-article]', '.entry', '.feed-item'
-            ];
+            const enclosure = item.querySelector('enclosure');
+            if (enclosure && !imageUrl) imageUrl = enclosure.getAttribute('url');
             
-            let items = [];
-            for (const selector of selectors) {
-                const found = doc.querySelectorAll(selector);
-                if (found.length > 0) {
-                    items = found;
-                    break;
-                }
+            // Intentar extraer imagen del description
+            if (!imageUrl) {
+                const imgMatch = description.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i);
+                if (imgMatch) imageUrl = imgMatch[0];
             }
             
-            if (items.length === 0) {
-                // Fallback: buscar enlaces con títulos
-                const links = doc.querySelectorAll('a');
-                items = Array.from(links).filter(link => {
-                    const text = link.innerText.trim();
-                    return text.length > 20 && text.length < 200 && link.href;
+            if (title && link && title.length > 5) {
+                noticiasFuente.push({
+                    id: `${link}_${idx}`,
+                    titulo: title.trim(),
+                    enlace: link,
+                    descripcion: description.slice(0, 200),
+                    imagen: imageUrl || `https://placehold.co/600x400/16213e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
+                    fuente: nombreFuente,
+                    fecha: pubDate,
+                    timestamp: new Date(pubDate || Date.now()).getTime()
                 });
             }
-            
-            items.forEach((item, idx) => {
-                // Extraer título
-                let title = '';
-                const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.headline', '.heading'];
-                for (const sel of titleSelectors) {
-                    const titleElem = item.querySelector(sel);
-                    if (titleElem && titleElem.innerText.trim().length > 10) {
-                        title = titleElem.innerText.trim();
-                        break;
-                    }
-                }
-                if (!title && item.innerText) title = item.innerText.trim().slice(0, 100);
-                
-                // Extraer enlace
-                let link = '';
-                const linkElem = item.querySelector('a');
-                if (linkElem && linkElem.href) link = linkElem.href;
-                else if (item.href) link = item.href;
-                if (link && !link.startsWith('http')) link = new URL(link, source.url).href;
-                
-                // Extraer imagen
-                let image = '';
-                const imgElem = item.querySelector('img');
-                if (imgElem && imgElem.src) image = imgElem.src;
-                if (image && !image.startsWith('http')) image = new URL(image, source.url).href;
-                
-                // Extraer resumen
-                let summary = '';
-                const summarySelectors = ['.summary', '.description', '.excerpt', 'p'];
-                for (const sel of summarySelectors) {
-                    const sumElem = item.querySelector(sel);
-                    if (sumElem && sumElem.innerText.trim().length > 20) {
-                        summary = sumElem.innerText.trim().slice(0, 200);
-                        break;
-                    }
-                }
-                if (!summary && title) summary = title;
-                
-                if (title && link && title.length > 15) {
-                    articles.push({
-                        id: `${source.name}-${idx}-${Date.now()}-${Math.random()}`,
-                        title: title,
-                        link: link,
-                        image: image || 'https://placehold.co/600x400/1e293b/3b82f6?text=Noticia',
-                        summary: summary.slice(0, 200),
-                        sourceName: source.name,
-                        timestamp: Date.now()
-                    });
-                }
-            });
-            
-            return articles.slice(0, 15);
-        } catch (error) {
-            console.error(`Error con proxy para ${source.url}:`, error);
-            continue;
-        }
+        });
+        
+        return noticiasFuente;
+    } catch (error) {
+        console.error(`Error con RSS de ${rssUrl}:`, error);
+        return [];
     }
-    return [];
 }
 
-// Fetch all news
-async function fetchAllNews() {
-    if (sources.length === 0) {
-        alert('Primero añade alguna fuente de noticias');
+// Actualizar todas las fuentes
+async function actualizarTodo() {
+    if (fuentes.length === 0) {
+        mostrarNotificacion('📌 Primero añade alguna fuente RSS', 'warning');
         return;
     }
     
-    newsListDiv.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Extrayendo noticias de todas las fuentes...</p></div>';
+    const container = document.getElementById('newsContainer');
+    container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>🔄 Cargando noticias de todas las fuentes...</p></div>';
     
-    let allNewArticles = [];
+    let todasLasNoticias = [];
     
-    for (const source of sources) {
-        const articles = await extractNewsFromUrl(source);
-        allNewArticles.push(...articles);
-        await new Promise(r => setTimeout(r, 500)); // Delay entre fuentes
+    for (const fuente of fuentes) {
+        const noticiasFuente = await fetchRSS(fuente.rss, fuente.nombre);
+        todasLasNoticias.push(...noticiasFuente);
+        await new Promise(r => setTimeout(r, 500));
     }
     
-    // Eliminar duplicados por link
-    const unique = [];
-    const seen = new Set();
-    for (const art of allNewArticles) {
-        if (!seen.has(art.link)) {
-            seen.add(art.link);
-            unique.push(art);
+    // Eliminar duplicados por enlace
+    const noticiasUnicas = [];
+    const enlacesVistos = new Set();
+    for (const noticia of todasLasNoticias) {
+        if (!enlacesVistos.has(noticia.enlace)) {
+            enlacesVistos.add(noticia.enlace);
+            noticiasUnicas.push(noticia);
         }
     }
     
-    allArticles = unique.sort((a, b) => b.timestamp - a.timestamp);
-    saveArticles();
-    renderNews();
+    // Ordenar por fecha (más reciente primero)
+    noticiasUnicas.sort((a, b) => b.timestamp - a.timestamp);
+    
+    noticias = noticiasUnicas;
+    guardarNoticias();
+    renderizarNoticias();
+    
+    mostrarNotificacion(`✨ Se cargaron ${noticias.length} noticias de ${fuentes.length} fuentes`, 'success');
 }
 
-// Render news grid
-function renderNews() {
-    if (allArticles.length === 0) {
-        newsListDiv.innerHTML = '<div class="loading-state"><i class="fas fa-newspaper"></i><p>No hay noticias. Haz clic en "Actualizar todo"</p></div>';
-        newsCountSpan.textContent = '0 noticias';
+// Renderizar noticias
+function renderizarNoticias() {
+    const container = document.getElementById('newsContainer');
+    
+    if (noticias.length === 0) {
+        container.innerHTML = '<div class="empty-state">📭 No hay noticias. Haz clic en "Actualizar todas".</div>';
         return;
     }
     
-    const unreadCount = allArticles.filter(art => !readIds.has(art.id)).length;
-    newsCountSpan.textContent = `${unreadCount} noticias nuevas`;
+    const noLeidas = noticias.filter(n => !leidas.has(n.id)).length;
+    document.title = noLeidas > 0 ? `(${noLeidas}) anduimRSS` : 'anduimRSS';
     
-    newsListDiv.innerHTML = allArticles.map(article => `
-        <div class="news-card ${readIds.has(article.id) ? 'read' : ''}" data-id="${article.id}" data-link="${article.link}">
-            <img class="news-img" src="${article.image}" alt="${escapeHtml(article.title)}" onerror="this.src='https://placehold.co/600x400/1e293b/3b82f6?text=📰'">
-            <div class="news-content">
-                <div class="news-title">${escapeHtml(article.title)}</div>
-                <div class="news-summary">${escapeHtml(article.summary)}</div>
-                <div class="news-meta">
-                    <span class="news-source"><i class="fas fa-globe"></i> ${escapeHtml(article.sourceName)}</span>
-                    <span class="news-date"><i class="far fa-clock"></i> ${new Date(article.timestamp).toLocaleTimeString()}</span>
-                </div>
-            </div>
+    container.innerHTML = `
+        <div class="news-stats">
+            📊 ${noticias.length} noticias · 
+            <span style="color: #fdcb6e;">✨ ${noLeidas} sin leer</span>
         </div>
-    `).join('');
+        <div class="news-grid">
+            ${noticias.map(noticia => `
+                <div class="news-card ${leidas.has(noticia.id) ? 'read' : ''}" data-url="${noticia.enlace}" data-id="${noticia.id}">
+                    <img class="news-image" src="${noticia.imagen}" alt="${escapeHtml(noticia.titulo)}" onerror="this.src='https://placehold.co/130x130/16213e/667eea?text=📰'">
+                    <div class="news-content">
+                        <div>
+                            <div class="news-title">${escapeHtml(noticia.titulo)}</div>
+                            <div class="news-description">${escapeHtml(noticia.descripcion)}</div>
+                        </div>
+                        <div class="news-meta">
+                            <span class="news-source">📌 ${escapeHtml(noticia.fuente)}</span>
+                            <span class="news-date">${formatearFecha(noticia.fecha)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
     
-    // Add click handlers
+    // Añadir event listeners
     document.querySelectorAll('.news-card').forEach(card => {
         card.addEventListener('click', (e) => {
             const id = card.dataset.id;
-            const link = card.dataset.link;
-            if (link) {
-                if (!readIds.has(id)) {
-                    readIds.add(id);
-                    saveReadIds();
-                    card.classList.add('read');
-                    renderNews(); // Refresh counter
-                }
-                window.open(link, '_blank');
+            const url = card.dataset.url;
+            
+            if (!leidas.has(id)) {
+                leidas.add(id);
+                guardarLeidas();
+                card.classList.add('read');
+                renderizarNoticias();
             }
+            
+            window.open(url, '_blank');
         });
     });
 }
 
-function markAllRead() {
-    allArticles.forEach(art => readIds.add(art.id));
-    saveReadIds();
-    renderNews();
+function marcarTodoLeido() {
+    if (noticias.length === 0) return;
+    noticias.forEach(n => leidas.add(n.id));
+    guardarLeidas();
+    renderizarNoticias();
+    mostrarNotificacion('✅ Todas las noticias marcadas como leídas', 'success');
 }
 
-function clearReadNews() {
-    allArticles = allArticles.filter(art => !readIds.has(art.id));
-    readIds.clear();
-    saveArticles();
-    saveReadIds();
-    renderNews();
+function limpiarLeidos() {
+    if (noticias.length === 0) return;
+    const leidasCount = noticias.filter(n => leidas.has(n.id)).length;
+    noticias = noticias.filter(n => !leidas.has(n.id));
+    leidas.clear();
+    guardarNoticias();
+    guardarLeidas();
+    renderizarNoticias();
+    mostrarNotificacion(`🗑️ Se eliminaron ${leidasCount} noticias leídas`, 'info');
 }
 
-function addSource() {
-    const url = newSourceUrl.value.trim();
-    let name = newSourceName.value.trim();
-    
-    if (!url) {
-        alert('Por favor, introduce una URL');
-        return;
-    }
-    
-    if (!name) {
-        try {
-            name = new URL(url).hostname.replace('www.', '').split('.')[0];
-        } catch(e) {
-            name = 'Fuente';
-        }
-    }
-    
-    sources.push({ url, name });
-    saveSources();
-    renderSources();
-    
-    // Clear modal inputs
-    newSourceUrl.value = '';
-    newSourceName.value = '';
-    modal.style.display = 'none';
-    
-    // Optional: auto-fetch
-    if (confirm('¿Quieres actualizar las noticias ahora?')) {
-        fetchAllNews();
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return 'Fecha desconocida';
+    try {
+        const fecha = new Date(fechaStr);
+        const ahora = new Date();
+        const diff = ahora - fecha;
+        const horas = Math.floor(diff / 3600000);
+        const dias = Math.floor(horas / 24);
+        
+        if (horas < 1) return 'Hace menos de 1h';
+        if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+        if (dias < 7) return `Hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+        return fecha.toLocaleDateString('es-ES');
+    } catch {
+        return fechaStr;
     }
 }
 
@@ -297,19 +271,49 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// Modal handling
-const addSourceBtnMobile = document.getElementById('addSourceBtnMobile');
-if (addSourceBtnMobile) {
-    addSourceBtnMobile.onclick = () => modal.style.display = 'block';
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Crear notificación flotante
+    const notif = document.createElement('div');
+    notif.textContent = mensaje;
+    notif.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${tipo === 'success' ? '#00b894' : tipo === 'error' ? '#ff7675' : tipo === 'warning' ? '#fdcb6e' : '#667eea'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
 }
-addSourceBtn.onclick = addSource;
-document.querySelector('.close').onclick = () => modal.style.display = 'none';
-window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+// Añadir animación de notificación
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
 
 // Event listeners
-fetchAllBtn.onclick = fetchAllNews;
-markAllReadBtn.onclick = markAllRead;
-clearReadBtn.onclick = clearReadNews;
+document.getElementById('addBtn').addEventListener('click', añadirFuente);
+document.getElementById('refreshBtn').addEventListener('click', actualizarTodo);
+document.getElementById('markReadBtn').addEventListener('click', marcarTodoLeido);
+document.getElementById('clearReadBtn').addEventListener('click', limpiarLeidos);
 
-// Initialize
-loadData();
+// Inicializar
+cargarDatos();
