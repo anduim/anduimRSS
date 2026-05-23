@@ -3,7 +3,7 @@ let fuentes = [];
 let noticias = [];
 let leidas = new Set();
 
-// Cargar datos guardados al iniciar
+// Cargar datos al iniciar
 function cargarDatos() {
     const fuentesGuardadas = localStorage.getItem('anduimRSS_fuentes');
     const noticiasGuardadas = localStorage.getItem('anduimRSS_noticias');
@@ -29,13 +29,32 @@ function guardarLeidas() {
     localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas]));
 }
 
-// Añadir fuente
+// Función para mostrar mensajes
+function mostrarMensaje(mensaje, esError = false) {
+    const msgDiv = document.createElement('div');
+    msgDiv.textContent = mensaje;
+    msgDiv.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${esError ? '#ff7675' : '#00b894'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        z-index: 1000;
+        animation: fadeInOut 3s ease;
+    `;
+    document.body.appendChild(msgDiv);
+    setTimeout(() => msgDiv.remove(), 3000);
+}
+
+// Añadir fuente (CORREGIDO)
 function añadirFuente() {
     const nombre = document.getElementById('sourceName').value.trim();
     const rssUrl = document.getElementById('sourceRss').value.trim();
     
     if (!nombre || !rssUrl) {
-        mostrarNotificacion('Por favor, completa ambos campos', 'error');
+        mostrarMensaje('❌ Por favor, completa ambos campos', true);
         return;
     }
     
@@ -47,15 +66,14 @@ function añadirFuente() {
     document.getElementById('sourceName').value = '';
     document.getElementById('sourceRss').value = '';
     
-    mostrarNotificacion(`✅ Fuente "${nombre}" añadida correctamente`, 'success');
+    mostrarMensaje(`✅ Fuente "${nombre}" añadida correctamente`);
 }
 
-// Renderizar fuentes
 function renderizarFuentes() {
     const container = document.getElementById('sourcesList');
     
     if (fuentes.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📭 No hay fuentes aún. Añade algunas usando RSS.</div>';
+        container.innerHTML = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">📭 No hay fuentes aún. Añade algunas usando RSS.</div>';
         return;
     }
     
@@ -68,14 +86,14 @@ function renderizarFuentes() {
 }
 
 function eliminarFuente(index) {
-    const fuenteEliminada = fuentes[index].nombre;
+    const nombre = fuentes[index].nombre;
     fuentes.splice(index, 1);
     guardarFuentes();
     renderizarFuentes();
-    mostrarNotificacion(`🗑️ Fuente "${fuenteEliminada}" eliminada`, 'info');
+    mostrarMensaje(`🗑️ Fuente "${nombre}" eliminada`);
 }
 
-// Obtener RSS y convertirlo a JSON
+// Obtener RSS
 async function fetchRSS(rssUrl, nombreFuente) {
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
     try {
@@ -83,11 +101,8 @@ async function fetchRSS(rssUrl, nombreFuente) {
         const data = await response.json();
         const xmlText = data.contents;
         
-        // Parsear XML
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        
-        // Obtener items
         const items = xmlDoc.querySelectorAll('item');
         const noticiasFuente = [];
         
@@ -97,22 +112,14 @@ async function fetchRSS(rssUrl, nombreFuente) {
             let description = item.querySelector('description')?.textContent || '';
             const pubDate = item.querySelector('pubDate')?.textContent || '';
             
-            // Limpiar HTML de la descripción
             description = description.replace(/<[^>]*>/g, '').trim();
             
-            // Extraer imagen
             let imageUrl = '';
             const mediaContent = item.querySelector('media\\:content, content');
             if (mediaContent) imageUrl = mediaContent.getAttribute('url');
             
             const enclosure = item.querySelector('enclosure');
             if (enclosure && !imageUrl) imageUrl = enclosure.getAttribute('url');
-            
-            // Intentar extraer imagen del description
-            if (!imageUrl) {
-                const imgMatch = description.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i);
-                if (imgMatch) imageUrl = imgMatch[0];
-            }
             
             if (title && link && title.length > 5) {
                 noticiasFuente.push({
@@ -130,7 +137,7 @@ async function fetchRSS(rssUrl, nombreFuente) {
         
         return noticiasFuente;
     } catch (error) {
-        console.error(`Error con RSS de ${rssUrl}:`, error);
+        console.error(error);
         return [];
     }
 }
@@ -138,12 +145,12 @@ async function fetchRSS(rssUrl, nombreFuente) {
 // Actualizar todas las fuentes
 async function actualizarTodo() {
     if (fuentes.length === 0) {
-        mostrarNotificacion('📌 Primero añade alguna fuente RSS', 'warning');
+        mostrarMensaje('📌 Primero añade alguna fuente RSS', true);
         return;
     }
     
     const container = document.getElementById('newsContainer');
-    container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>🔄 Cargando noticias de todas las fuentes...</p></div>';
+    container.innerHTML = '<div class="loading-state">🔄 Cargando noticias...</div>';
     
     let todasLasNoticias = [];
     
@@ -153,7 +160,7 @@ async function actualizarTodo() {
         await new Promise(r => setTimeout(r, 500));
     }
     
-    // Eliminar duplicados por enlace
+    // Eliminar duplicados
     const noticiasUnicas = [];
     const enlacesVistos = new Set();
     for (const noticia of todasLasNoticias) {
@@ -163,17 +170,14 @@ async function actualizarTodo() {
         }
     }
     
-    // Ordenar por fecha (más reciente primero)
     noticiasUnicas.sort((a, b) => b.timestamp - a.timestamp);
-    
     noticias = noticiasUnicas;
     guardarNoticias();
     renderizarNoticias();
     
-    mostrarNotificacion(`✨ Se cargaron ${noticias.length} noticias de ${fuentes.length} fuentes`, 'success');
+    mostrarMensaje(`✨ Se cargaron ${noticias.length} noticias`);
 }
 
-// Renderizar noticias
 function renderizarNoticias() {
     const container = document.getElementById('newsContainer');
     
@@ -186,10 +190,7 @@ function renderizarNoticias() {
     document.title = noLeidas > 0 ? `(${noLeidas}) anduimRSS` : 'anduimRSS';
     
     container.innerHTML = `
-        <div class="news-stats">
-            📊 ${noticias.length} noticias · 
-            <span style="color: #fdcb6e;">✨ ${noLeidas} sin leer</span>
-        </div>
+        <div class="news-stats">📊 ${noticias.length} noticias · ✨ ${noLeidas} sin leer</div>
         <div class="news-grid">
             ${noticias.map(noticia => `
                 <div class="news-card ${leidas.has(noticia.id) ? 'read' : ''}" data-url="${noticia.enlace}" data-id="${noticia.id}">
@@ -209,9 +210,8 @@ function renderizarNoticias() {
         </div>
     `;
     
-    // Añadir event listeners
     document.querySelectorAll('.news-card').forEach(card => {
-        card.addEventListener('click', (e) => {
+        card.addEventListener('click', () => {
             const id = card.dataset.id;
             const url = card.dataset.url;
             
@@ -228,22 +228,20 @@ function renderizarNoticias() {
 }
 
 function marcarTodoLeido() {
-    if (noticias.length === 0) return;
     noticias.forEach(n => leidas.add(n.id));
     guardarLeidas();
     renderizarNoticias();
-    mostrarNotificacion('✅ Todas las noticias marcadas como leídas', 'success');
+    mostrarMensaje('✅ Todas las noticias marcadas como leídas');
 }
 
 function limpiarLeidos() {
-    if (noticias.length === 0) return;
     const leidasCount = noticias.filter(n => leidas.has(n.id)).length;
     noticias = noticias.filter(n => !leidas.has(n.id));
     leidas.clear();
     guardarNoticias();
     guardarLeidas();
     renderizarNoticias();
-    mostrarNotificacion(`🗑️ Se eliminaron ${leidasCount} noticias leídas`, 'info');
+    mostrarMensaje(`🗑️ Se eliminaron ${leidasCount} noticias leídas`);
 }
 
 function formatearFecha(fechaStr) {
@@ -253,11 +251,9 @@ function formatearFecha(fechaStr) {
         const ahora = new Date();
         const diff = ahora - fecha;
         const horas = Math.floor(diff / 3600000);
-        const dias = Math.floor(horas / 24);
         
         if (horas < 1) return 'Hace menos de 1h';
-        if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
-        if (dias < 7) return `Hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+        if (horas < 24) return `Hace ${horas} horas`;
         return fecha.toLocaleDateString('es-ES');
     } catch {
         return fechaStr;
@@ -271,44 +267,6 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-function mostrarNotificacion(mensaje, tipo = 'info') {
-    // Crear notificación flotante
-    const notif = document.createElement('div');
-    notif.textContent = mensaje;
-    notif.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: ${tipo === 'success' ? '#00b894' : tipo === 'error' ? '#ff7675' : tipo === 'warning' ? '#fdcb6e' : '#667eea'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 500;
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    `;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
-}
-
-// Añadir animación de notificación
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-`;
-document.head.appendChild(style);
-
 // Event listeners
 document.getElementById('addBtn').addEventListener('click', añadirFuente);
 document.getElementById('refreshBtn').addEventListener('click', actualizarTodo);
@@ -317,3 +275,15 @@ document.getElementById('clearReadBtn').addEventListener('click', limpiarLeidos)
 
 // Inicializar
 cargarDatos();
+
+// Añadir animación CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(100%); }
+        10% { opacity: 1; transform: translateX(0); }
+        90% { opacity: 1; transform: translateX(0); }
+        100% { opacity: 0; transform: translateX(100%); }
+    }
+`;
+document.head.appendChild(style);
