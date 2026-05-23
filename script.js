@@ -1,24 +1,25 @@
-// Claves de localStorage
-const STORAGE_SOURCES = 'news_sources';
-const STORAGE_ARTICLES = 'news_articles';
-const STORAGE_READ = 'news_read_ids';
+// Storage keys
+const STORAGE_SOURCES = 'newsflow_sources';
+const STORAGE_ARTICLES = 'newsflow_articles';
+const STORAGE_READ = 'newsflow_read';
 
-// Estado
 let sources = [];
 let allArticles = [];
-let readArticleIds = new Set();
+let readIds = new Set();
 
-// DOM Elements
+// DOM elements
 const sourcesListDiv = document.getElementById('sourcesList');
 const newsListDiv = document.getElementById('newsList');
-const newSourceUrlInput = document.getElementById('newSourceUrl');
-const newSourceNameInput = document.getElementById('newSourceName');
+const newSourceUrl = document.getElementById('newSourceUrl');
+const newSourceName = document.getElementById('newSourceName');
 const addSourceBtn = document.getElementById('addSourceBtn');
 const fetchAllBtn = document.getElementById('fetchAllBtn');
 const markAllReadBtn = document.getElementById('markAllReadBtn');
 const clearReadBtn = document.getElementById('clearReadBtn');
+const modal = document.getElementById('addModal');
+const newsCountSpan = document.getElementById('newsCount');
 
-// Cargar datos guardados
+// Load saved data
 function loadData() {
     const savedSources = localStorage.getItem(STORAGE_SOURCES);
     if (savedSources) sources = JSON.parse(savedSources);
@@ -27,146 +28,162 @@ function loadData() {
     if (savedArticles) allArticles = JSON.parse(savedArticles);
     
     const savedRead = localStorage.getItem(STORAGE_READ);
-    if (savedRead) readArticleIds = new Set(JSON.parse(savedRead));
+    if (savedRead) readIds = new Set(JSON.parse(savedRead));
     
     renderSources();
     renderNews();
 }
 
-function saveSources() {
-    localStorage.setItem(STORAGE_SOURCES, JSON.stringify(sources));
-}
+// Save functions
+function saveSources() { localStorage.setItem(STORAGE_SOURCES, JSON.stringify(sources)); }
+function saveArticles() { localStorage.setItem(STORAGE_ARTICLES, JSON.stringify(allArticles)); }
+function saveReadIds() { localStorage.setItem(STORAGE_READ, JSON.stringify([...readIds])); }
 
-function saveArticles() {
-    localStorage.setItem(STORAGE_ARTICLES, JSON.stringify(allArticles));
-}
-
-function saveReadIds() {
-    localStorage.setItem(STORAGE_READ, JSON.stringify([...readArticleIds]));
-}
-
+// Render sources in sidebar
 function renderSources() {
     if (sources.length === 0) {
-        sourcesListDiv.innerHTML = '<div style="color:#64748b">No hay fuentes. Añade alguna URL.</div>';
+        sourcesListDiv.innerHTML = '<div class="empty-state-small"><i class="fas fa-plus-circle"></i><br>Añade tu primera fuente</div>';
         return;
     }
+    
     sourcesListDiv.innerHTML = sources.map((src, idx) => `
-        <div class="source-tag">
-            <span>📄 ${src.name}</span>
-            <button data-index="${idx}" class="remove-source">✖</button>
+        <div class="source-item">
+            <span class="source-name"><i class="fas fa-globe"></i> ${escapeHtml(src.name)}</span>
+            <button class="remove-source" data-index="${idx}"><i class="fas fa-trash"></i></button>
         </div>
     `).join('');
     
     document.querySelectorAll('.remove-source').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(btn.dataset.index);
-            removeSource(idx);
+            sources.splice(idx, 1);
+            saveSources();
+            renderSources();
+            allArticles = allArticles.filter(art => !sources.some(s => s.name === art.sourceName));
+            saveArticles();
+            renderNews();
         });
     });
 }
 
-function removeSource(index) {
-    sources.splice(index, 1);
-    saveSources();
-    renderSources();
-    // Opcional: limpiar artículos de esa fuente (o dejarlos, pero se mezclan)
-    // Para simplificar, pedimos al usuario re-actualizar
-    allArticles = [];
-    saveArticles();
-    renderNews();
-}
-
-function addSource() {
-    const url = newSourceUrlInput.value.trim();
-    let name = newSourceNameInput.value.trim();
-    if (!url) return;
-    if (!name) name = new URL(url).hostname;
+// Improved news extraction
+async function extractNewsFromUrl(source) {
+    const proxyUrls = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`,
+        `https://cors-anywhere.herokuapp.com/${source.url}`
+    ];
     
-    sources.push({ url, name });
-    saveSources();
-    renderSources();
-    newSourceUrlInput.value = '';
-    newSourceNameInput.value = '';
-    
-    // Opcional: auto-fetch esta fuente
-}
-
-async function fetchNewsFromSource(source) {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}`;
-    try {
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-        const html = data.contents;
-        
-        // Extraer noticias: buscamos etiquetas <a> grandes o artículos
-        // Método simplificado: busca todos los enlaces y coge título + posible img
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Buscar artículos (por common selectors)
-        const articles = [];
-        const possibleArticles = doc.querySelectorAll('article, .post, .news-item, .entry, .card, .noticia');
-        
-        if (possibleArticles.length > 0) {
-            possibleArticles.forEach((el, idx) => {
-                const link = el.querySelector('a');
-                const titleEl = el.querySelector('h1, h2, h3, .title, .headline');
-                const imgEl = el.querySelector('img');
-                let title = titleEl ? titleEl.innerText.trim() : (link ? link.innerText.trim() : 'Sin título');
-                let urlLink = link ? link.href : '';
-                if (urlLink && !urlLink.startsWith('http')) urlLink = new URL(urlLink, source.url).href;
-                let imgUrl = imgEl ? imgEl.src : '';
-                let summary = el.innerText.slice(0, 150).trim();
+    for (const proxyUrl of proxyUrls) {
+        try {
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            const html = data.contents || data;
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const articles = [];
+            
+            // Estrategias de extracción mejoradas
+            const selectors = [
+                'article', '.article', '.news-item', '.story', '.post',
+                '.node', '.item-list', '.list-item', '.card', '.noticia',
+                '[data-article]', '.entry', '.feed-item'
+            ];
+            
+            let items = [];
+            for (const selector of selectors) {
+                const found = doc.querySelectorAll(selector);
+                if (found.length > 0) {
+                    items = found;
+                    break;
+                }
+            }
+            
+            if (items.length === 0) {
+                // Fallback: buscar enlaces con títulos
+                const links = doc.querySelectorAll('a');
+                items = Array.from(links).filter(link => {
+                    const text = link.innerText.trim();
+                    return text.length > 20 && text.length < 200 && link.href;
+                });
+            }
+            
+            items.forEach((item, idx) => {
+                // Extraer título
+                let title = '';
+                const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.headline', '.heading'];
+                for (const sel of titleSelectors) {
+                    const titleElem = item.querySelector(sel);
+                    if (titleElem && titleElem.innerText.trim().length > 10) {
+                        title = titleElem.innerText.trim();
+                        break;
+                    }
+                }
+                if (!title && item.innerText) title = item.innerText.trim().slice(0, 100);
                 
-                if (title && urlLink && title.length > 5) {
+                // Extraer enlace
+                let link = '';
+                const linkElem = item.querySelector('a');
+                if (linkElem && linkElem.href) link = linkElem.href;
+                else if (item.href) link = item.href;
+                if (link && !link.startsWith('http')) link = new URL(link, source.url).href;
+                
+                // Extraer imagen
+                let image = '';
+                const imgElem = item.querySelector('img');
+                if (imgElem && imgElem.src) image = imgElem.src;
+                if (image && !image.startsWith('http')) image = new URL(image, source.url).href;
+                
+                // Extraer resumen
+                let summary = '';
+                const summarySelectors = ['.summary', '.description', '.excerpt', 'p'];
+                for (const sel of summarySelectors) {
+                    const sumElem = item.querySelector(sel);
+                    if (sumElem && sumElem.innerText.trim().length > 20) {
+                        summary = sumElem.innerText.trim().slice(0, 200);
+                        break;
+                    }
+                }
+                if (!summary && title) summary = title;
+                
+                if (title && link && title.length > 15) {
                     articles.push({
-                        id: `${source.name}-${idx}-${Date.now()}`,
-                        title,
-                        link: urlLink,
-                        image: imgUrl,
-                        summary: summary || title,
+                        id: `${source.name}-${idx}-${Date.now()}-${Math.random()}`,
+                        title: title,
+                        link: link,
+                        image: image || 'https://placehold.co/600x400/1e293b/3b82f6?text=Noticia',
+                        summary: summary.slice(0, 200),
                         sourceName: source.name,
                         timestamp: Date.now()
                     });
                 }
             });
+            
+            return articles.slice(0, 15);
+        } catch (error) {
+            console.error(`Error con proxy para ${source.url}:`, error);
+            continue;
         }
-        
-        // Fallback: buscar enlaces con títulos prominentes
-        if (articles.length === 0) {
-            const headings = doc.querySelectorAll('a h1, a h2, a h3, a .title');
-            headings.forEach((heading, idx) => {
-                const parentLink = heading.closest('a');
-                if (parentLink && parentLink.href) {
-                    articles.push({
-                        id: `${source.name}-${idx}`,
-                        title: heading.innerText.trim(),
-                        link: parentLink.href,
-                        image: '',
-                        summary: heading.innerText.trim().slice(0, 150),
-                        sourceName: source.name,
-                        timestamp: Date.now()
-                    });
-                }
-            });
-        }
-        
-        return articles.slice(0, 12); // máx 12 por fuente
-    } catch (error) {
-        console.error(`Error fetching ${source.url}:`, error);
-        return [];
     }
+    return [];
 }
 
+// Fetch all news
 async function fetchAllNews() {
-    newsListDiv.innerHTML = '<div class="loading">🔄 Cargando noticias desde todas las fuentes...</div>';
+    if (sources.length === 0) {
+        alert('Primero añade alguna fuente de noticias');
+        return;
+    }
+    
+    newsListDiv.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Extrayendo noticias de todas las fuentes...</p></div>';
+    
     let allNewArticles = [];
     
     for (const source of sources) {
-        const articles = await fetchNewsFromSource(source);
+        const articles = await extractNewsFromUrl(source);
         allNewArticles.push(...articles);
-        // pequeño delay para no bloquear
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 500)); // Delay entre fuentes
     }
     
     // Eliminar duplicados por link
@@ -179,39 +196,47 @@ async function fetchAllNews() {
         }
     }
     
-    allArticles = unique.sort((a,b) => b.timestamp - a.timestamp);
+    allArticles = unique.sort((a, b) => b.timestamp - a.timestamp);
     saveArticles();
     renderNews();
 }
 
+// Render news grid
 function renderNews() {
     if (allArticles.length === 0) {
-        newsListDiv.innerHTML = '<div class="no-news">📭 No hay noticias. Añade fuentes y pulsa "Actualizar todas".</div>';
+        newsListDiv.innerHTML = '<div class="loading-state"><i class="fas fa-newspaper"></i><p>No hay noticias. Haz clic en "Actualizar todo"</p></div>';
+        newsCountSpan.textContent = '0 noticias';
         return;
     }
     
+    const unreadCount = allArticles.filter(art => !readIds.has(art.id)).length;
+    newsCountSpan.textContent = `${unreadCount} noticias nuevas`;
+    
     newsListDiv.innerHTML = allArticles.map(article => `
-        <div class="news-card ${readArticleIds.has(article.id) ? 'read' : ''}" data-id="${article.id}" data-link="${article.link}">
-            ${article.image ? `<img class="news-img" src="${article.image}" alt="img" loading="lazy" onerror="this.src='https://placehold.co/600x400?text=Sin+imagen'">` : '<div class="news-img" style="background:#e2e8f0; display:flex; align-items:center; justify-content:center;">📰</div>'}
+        <div class="news-card ${readIds.has(article.id) ? 'read' : ''}" data-id="${article.id}" data-link="${article.link}">
+            <img class="news-img" src="${article.image}" alt="${escapeHtml(article.title)}" onerror="this.src='https://placehold.co/600x400/1e293b/3b82f6?text=📰'">
             <div class="news-content">
                 <div class="news-title">${escapeHtml(article.title)}</div>
                 <div class="news-summary">${escapeHtml(article.summary)}</div>
-                <div class="news-source">📌 ${escapeHtml(article.sourceName)}</div>
+                <div class="news-meta">
+                    <span class="news-source"><i class="fas fa-globe"></i> ${escapeHtml(article.sourceName)}</span>
+                    <span class="news-date"><i class="far fa-clock"></i> ${new Date(article.timestamp).toLocaleTimeString()}</span>
+                </div>
             </div>
         </div>
     `).join('');
     
-    // Event listeners a cada tarjeta
+    // Add click handlers
     document.querySelectorAll('.news-card').forEach(card => {
         card.addEventListener('click', (e) => {
             const id = card.dataset.id;
             const link = card.dataset.link;
             if (link) {
-                // Marcar como leída antes de abrir
-                if (!readArticleIds.has(id)) {
-                    readArticleIds.add(id);
+                if (!readIds.has(id)) {
+                    readIds.add(id);
                     saveReadIds();
                     card.classList.add('read');
+                    renderNews(); // Refresh counter
                 }
                 window.open(link, '_blank');
             }
@@ -220,34 +245,71 @@ function renderNews() {
 }
 
 function markAllRead() {
-    allArticles.forEach(art => readArticleIds.add(art.id));
+    allArticles.forEach(art => readIds.add(art.id));
     saveReadIds();
     renderNews();
 }
 
 function clearReadNews() {
-    allArticles = allArticles.filter(art => !readArticleIds.has(art.id));
-    readArticleIds.clear();
+    allArticles = allArticles.filter(art => !readIds.has(art.id));
+    readIds.clear();
     saveArticles();
     saveReadIds();
     renderNews();
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+function addSource() {
+    const url = newSourceUrl.value.trim();
+    let name = newSourceName.value.trim();
+    
+    if (!url) {
+        alert('Por favor, introduce una URL');
+        return;
+    }
+    
+    if (!name) {
+        try {
+            name = new URL(url).hostname.replace('www.', '').split('.')[0];
+        } catch(e) {
+            name = 'Fuente';
+        }
+    }
+    
+    sources.push({ url, name });
+    saveSources();
+    renderSources();
+    
+    // Clear modal inputs
+    newSourceUrl.value = '';
+    newSourceName.value = '';
+    modal.style.display = 'none';
+    
+    // Optional: auto-fetch
+    if (confirm('¿Quieres actualizar las noticias ahora?')) {
+        fetchAllNews();
+    }
 }
 
-// Event listeners
-addSourceBtn.addEventListener('click', addSource);
-fetchAllBtn.addEventListener('click', fetchAllNews);
-markAllReadBtn.addEventListener('click', markAllRead);
-clearReadBtn.addEventListener('click', clearReadNews);
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
-// Inicializar
+// Modal handling
+const addSourceBtnMobile = document.getElementById('addSourceBtnMobile');
+if (addSourceBtnMobile) {
+    addSourceBtnMobile.onclick = () => modal.style.display = 'block';
+}
+addSourceBtn.onclick = addSource;
+document.querySelector('.close').onclick = () => modal.style.display = 'none';
+window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+// Event listeners
+fetchAllBtn.onclick = fetchAllNews;
+markAllReadBtn.onclick = markAllRead;
+clearReadBtn.onclick = clearReadNews;
+
+// Initialize
 loadData();

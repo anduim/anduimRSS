@@ -3,38 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Agregador de Noticias Web</title>
+    <title>NewsFlow - Agregador de Noticias Inteligente</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📰 Agregador de Noticias</h1>
-            <p>Añade páginas web como fuentes y lee sus novedades</p>
-        </header>
-
-        <div class="add-source">
-            <input type="url" id="newSourceUrl" placeholder="https://ejemplo.com/noticias" required>
-            <input type="text" id="newSourceName" placeholder="Nombre de la fuente (ej: El Ejemplo)">
-            <button id="addSourceBtn">➕ Añadir fuente</button>
-        </div>
-
-        <div class="sources-panel">
-            <h2>📌 Tus fuentes</h2>
-            <div id="sourcesList" class="sources-list"></div>
-            <div class="actions">
-                <button id="fetchAllBtn" class="btn-primary">🔄 Actualizar todas</button>
-                <button id="markAllReadBtn" class="btn-secondary">✅ Marcar todo como leído</button>
-                <button id="clearReadBtn" class="btn-secondary">🗑️ Limpiar noticias leídas</button>
+    <div class="app-container">
+        <!-- Sidebar moderna -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-rss"></i>
+                <span>NewsFlow</span>
             </div>
-        </div>
+            
+            <div class="sidebar-section">
+                <h3>Fuentes</h3>
+                <div id="sourcesList" class="sources-list-sidebar">
+                    <div class="empty-state-small">No hay fuentes aún</div>
+                </div>
+                <button id="fetchAllBtn" class="btn-update">
+                    <i class="fas fa-sync-alt"></i> Actualizar todo
+                </button>
+            </div>
 
-        <div class="news-container">
-            <h2>📬 Últimas noticias</h2>
+            <div class="sidebar-section">
+                <h3>Acciones rápidas</h3>
+                <button id="markAllReadBtn" class="btn-sidebar">
+                    <i class="fas fa-check-double"></i> Marcar todo leído
+                </button>
+                <button id="clearReadBtn" class="btn-sidebar">
+                    <i class="fas fa-trash-alt"></i> Limpiar leídos
+                </button>
+            </div>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1><i class="fas fa-newspaper"></i> Últimas noticias</h1>
+                    <span id="newsCount" class="news-badge">0 noticias</span>
+                </div>
+                <button id="addSourceBtnMobile" class="btn-mobile-add">
+                    <i class="fas fa-plus"></i> Añadir fuente
+                </button>
+            </header>
+
+            <!-- Modal para añadir fuente -->
+            <div id="addModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-plus-circle"></i> Añadir nueva fuente</h2>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <input type="url" id="newSourceUrl" placeholder="https://www.elmundo.es/" required>
+                        <input type="text" id="newSourceName" placeholder="Nombre (ej: El Mundo)">
+                        <div class="modal-buttons">
+                            <button id="addSourceBtn" class="btn-primary">Guardar fuente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de noticias -->
             <div id="newsList" class="news-grid">
-                <div class="loading">Cargando noticias... Haz clic en "Actualizar todas"</div>
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando noticias...</p>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script src="script.js"></script>
