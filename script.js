@@ -3,7 +3,7 @@ let fuentes = [];
 let noticias = [];
 let leidas = new Set();
 
-// Cargar datos al iniciar
+// Cargar datos guardados
 function cargarDatos() {
     const fuentesGuardadas = localStorage.getItem('anduimRSS_fuentes');
     const noticiasGuardadas = localStorage.getItem('anduimRSS_noticias');
@@ -29,32 +29,13 @@ function guardarLeidas() {
     localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas]));
 }
 
-// Función para mostrar mensajes
-function mostrarMensaje(mensaje, esError = false) {
-    const msgDiv = document.createElement('div');
-    msgDiv.textContent = mensaje;
-    msgDiv.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: ${esError ? '#ff7675' : '#00b894'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 12px;
-        z-index: 1000;
-        animation: fadeInOut 3s ease;
-    `;
-    document.body.appendChild(msgDiv);
-    setTimeout(() => msgDiv.remove(), 3000);
-}
-
-// Añadir fuente (CORREGIDO)
+// Añadir fuente
 function añadirFuente() {
     const nombre = document.getElementById('sourceName').value.trim();
     const rssUrl = document.getElementById('sourceRss').value.trim();
     
     if (!nombre || !rssUrl) {
-        mostrarMensaje('❌ Por favor, completa ambos campos', true);
+        mostrarMensaje('❌ Completa ambos campos', true);
         return;
     }
     
@@ -62,18 +43,17 @@ function añadirFuente() {
     guardarFuentes();
     renderizarFuentes();
     
-    // Limpiar campos
     document.getElementById('sourceName').value = '';
     document.getElementById('sourceRss').value = '';
     
-    mostrarMensaje(`✅ Fuente "${nombre}" añadida correctamente`);
+    mostrarMensaje(`✅ Fuente "${nombre}" añadida`);
 }
 
 function renderizarFuentes() {
     const container = document.getElementById('sourcesList');
     
     if (fuentes.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">📭 No hay fuentes aún. Añade algunas usando RSS.</div>';
+        container.innerHTML = '<div style="color: var(--text-secondary); padding: 10px 0;">📭 No hay fuentes. Añade alguna usando RSS.</div>';
         return;
     }
     
@@ -126,8 +106,8 @@ async function fetchRSS(rssUrl, nombreFuente) {
                     id: `${link}_${idx}`,
                     titulo: title.trim(),
                     enlace: link,
-                    descripcion: description.slice(0, 200),
-                    imagen: imageUrl || `https://placehold.co/600x400/16213e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
+                    descripcion: description.slice(0, 180),
+                    imagen: imageUrl || `https://placehold.co/600x400/1e1e1e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
                     fuente: nombreFuente,
                     fecha: pubDate,
                     timestamp: new Date(pubDate || Date.now()).getTime()
@@ -157,10 +137,10 @@ async function actualizarTodo() {
     for (const fuente of fuentes) {
         const noticiasFuente = await fetchRSS(fuente.rss, fuente.nombre);
         todasLasNoticias.push(...noticiasFuente);
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 400));
     }
     
-    // Eliminar duplicados
+    // Eliminar duplicados por enlace
     const noticiasUnicas = [];
     const enlacesVistos = new Set();
     for (const noticia of todasLasNoticias) {
@@ -170,12 +150,14 @@ async function actualizarTodo() {
         }
     }
     
+    // ORDENAR: de más nueva a más antigua (las últimas primero)
     noticiasUnicas.sort((a, b) => b.timestamp - a.timestamp);
+    
     noticias = noticiasUnicas;
     guardarNoticias();
     renderizarNoticias();
     
-    mostrarMensaje(`✨ Se cargaron ${noticias.length} noticias`);
+    mostrarMensaje(`✨ ${noticias.length} noticias cargadas`);
 }
 
 function renderizarNoticias() {
@@ -194,7 +176,7 @@ function renderizarNoticias() {
         <div class="news-grid">
             ${noticias.map(noticia => `
                 <div class="news-card ${leidas.has(noticia.id) ? 'read' : ''}" data-url="${noticia.enlace}" data-id="${noticia.id}">
-                    <img class="news-image" src="${noticia.imagen}" alt="${escapeHtml(noticia.titulo)}" onerror="this.src='https://placehold.co/130x130/16213e/667eea?text=📰'">
+                    <img class="news-image" src="${noticia.imagen}" alt="${escapeHtml(noticia.titulo)}" onerror="this.src='https://placehold.co/130x130/1e1e1e/667eea?text=📰'">
                     <div class="news-content">
                         <div>
                             <div class="news-title">${escapeHtml(noticia.titulo)}</div>
@@ -228,20 +210,69 @@ function renderizarNoticias() {
 }
 
 function marcarTodoLeido() {
+    if (noticias.length === 0) return;
     noticias.forEach(n => leidas.add(n.id));
     guardarLeidas();
     renderizarNoticias();
-    mostrarMensaje('✅ Todas las noticias marcadas como leídas');
+    mostrarMensaje('✅ Todas marcadas como leídas');
 }
 
 function limpiarLeidos() {
+    if (noticias.length === 0) return;
     const leidasCount = noticias.filter(n => leidas.has(n.id)).length;
     noticias = noticias.filter(n => !leidas.has(n.id));
     leidas.clear();
     guardarNoticias();
     guardarLeidas();
     renderizarNoticias();
-    mostrarMensaje(`🗑️ Se eliminaron ${leidasCount} noticias leídas`);
+    mostrarMensaje(`🗑️ ${leidasCount} noticias leídas eliminadas`);
+}
+
+// Exportar fuentes
+function exportarFuentes() {
+    if (fuentes.length === 0) {
+        mostrarMensaje('No hay fuentes para exportar', true);
+        return;
+    }
+    
+    const data = JSON.stringify(fuentes, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `anduimRSS_fuentes_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarMensaje('✅ Fuentes exportadas');
+}
+
+// Importar fuentes
+function importarFuentes() {
+    const input = document.getElementById('importFile');
+    input.click();
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const fuentesImportadas = JSON.parse(event.target.result);
+                if (Array.isArray(fuentesImportadas) && fuentesImportadas.every(f => f.nombre && f.rss)) {
+                    fuentes = fuentesImportadas;
+                    guardarFuentes();
+                    renderizarFuentes();
+                    mostrarMensaje(`✅ Importadas ${fuentes.length} fuentes`);
+                } else {
+                    mostrarMensaje('❌ Archivo inválido', true);
+                }
+            } catch (error) {
+                mostrarMensaje('❌ Error al leer el archivo', true);
+            }
+        };
+        reader.readAsText(file);
+    };
 }
 
 function formatearFecha(fechaStr) {
@@ -252,12 +283,37 @@ function formatearFecha(fechaStr) {
         const diff = ahora - fecha;
         const horas = Math.floor(diff / 3600000);
         
-        if (horas < 1) return 'Hace menos de 1h';
-        if (horas < 24) return `Hace ${horas} horas`;
+        if (horas < 1) return 'Ahora mismo';
+        if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
         return fecha.toLocaleDateString('es-ES');
     } catch {
         return fechaStr;
     }
+}
+
+function mostrarMensaje(mensaje, esError = false) {
+    const msgDiv = document.createElement('div');
+    msgDiv.textContent = mensaje;
+    msgDiv.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        max-width: 300px;
+        margin: 0 auto;
+        background: ${esError ? '#f56565' : '#48bb78'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        text-align: center;
+        z-index: 1000;
+        animation: fadeInOut 2.5s ease;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    document.body.appendChild(msgDiv);
+    setTimeout(() => msgDiv.remove(), 2500);
 }
 
 function escapeHtml(str) {
@@ -267,23 +323,25 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// Añadir animación CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(20px); }
+        15% { opacity: 1; transform: translateY(0); }
+        85% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(20px); }
+    }
+`;
+document.head.appendChild(style);
+
 // Event listeners
 document.getElementById('addBtn').addEventListener('click', añadirFuente);
 document.getElementById('refreshBtn').addEventListener('click', actualizarTodo);
 document.getElementById('markReadBtn').addEventListener('click', marcarTodoLeido);
 document.getElementById('clearReadBtn').addEventListener('click', limpiarLeidos);
+document.getElementById('exportBtn').addEventListener('click', exportarFuentes);
+document.getElementById('importBtn').addEventListener('click', importarFuentes);
 
 // Inicializar
 cargarDatos();
-
-// Añadir animación CSS
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateX(100%); }
-        10% { opacity: 1; transform: translateX(0); }
-        90% { opacity: 1; transform: translateX(0); }
-        100% { opacity: 0; transform: translateX(100%); }
-    }
-`;
-document.head.appendChild(style);

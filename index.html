@@ -2,22 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>anduimRSS - Lector de noticias</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <div class="logo-icon">📰</div>
-                <div class="logo-text">
-                    <h1>anduim<span class="gradient">RSS</span></h1>
-                    <p>Tu agregador de noticias inteligente</p>
-                </div>
-            </div>
+            <h1>📰 anduim<span class="gradient">RSS</span></h1>
+            <p>Tu agregador de noticias inteligente</p>
         </header>
 
+        <!-- Añadir fuente -->
         <div class="card">
             <h3>➕ Añadir nueva fuente</h3>
             <div class="add-form">
@@ -27,19 +23,29 @@
             </div>
         </div>
 
+        <!-- Mis fuentes -->
         <div class="card">
             <h3>📌 Mis fuentes</h3>
             <div id="sourcesList" class="sources-list"></div>
+            
+            <!-- Botones de exportar/importar -->
+            <div class="export-import">
+                <button id="exportBtn" class="btn btn-secondary">💾 Exportar fuentes</button>
+                <button id="importBtn" class="btn btn-secondary">📂 Importar fuentes</button>
+                <input type="file" id="importFile" accept=".json" style="display: none">
+            </div>
         </div>
 
+        <!-- Acciones -->
         <div class="actions-bar">
             <button id="refreshBtn" class="btn btn-success">🔄 Actualizar todas</button>
             <button id="markReadBtn" class="btn btn-secondary">✅ Marcar todo leído</button>
             <button id="clearReadBtn" class="btn btn-secondary">🗑️ Limpiar leídos</button>
         </div>
 
+        <!-- Noticias -->
         <div id="newsContainer" class="news-container">
-            <div class="loading-state">📭 No hay noticias. Haz clic en "Actualizar todas".</div>
+            <div class="loading-state">✨ Haz clic en "Actualizar todas" para cargar noticias</div>
         </div>
     </div>
 
