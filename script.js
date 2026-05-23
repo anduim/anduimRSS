@@ -2,6 +2,7 @@
 let fuentes = [];
 let noticias = [];
 let leidas = new Set();
+let actualizando = false;
 
 // Cargar datos guardados
 function cargarDatos() {
@@ -17,27 +18,21 @@ function cargarDatos() {
     renderizarNoticias();
 }
 
-function guardarFuentes() {
-    localStorage.setItem('anduimRSS_fuentes', JSON.stringify(fuentes));
-}
-
-function guardarNoticias() {
-    localStorage.setItem('anduimRSS_noticias', JSON.stringify(noticias));
-}
-
-function guardarLeidas() {
-    localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas]));
-}
+function guardarFuentes() { localStorage.setItem('anduimRSS_fuentes', JSON.stringify(fuentes)); }
+function guardarNoticias() { localStorage.setItem('anduimRSS_noticias', JSON.stringify(noticias)); }
+function guardarLeidas() { localStorage.setItem('anduimRSS_leidas', JSON.stringify([...leidas])); }
 
 // Añadir fuente
 function añadirFuente() {
     const nombre = document.getElementById('sourceName').value.trim();
-    const rssUrl = document.getElementById('sourceRss').value.trim();
+    let rssUrl = document.getElementById('sourceRss').value.trim();
     
     if (!nombre || !rssUrl) {
         mostrarMensaje('❌ Completa ambos campos', true);
         return;
     }
+    
+    if (!rssUrl.startsWith('http')) rssUrl = 'https://' + rssUrl;
     
     fuentes.push({ nombre, rss: rssUrl });
     guardarFuentes();
@@ -45,7 +40,6 @@ function añadirFuente() {
     
     document.getElementById('sourceName').value = '';
     document.getElementById('sourceRss').value = '';
-    
     mostrarMensaje(`✅ Fuente "${nombre}" añadida`);
 }
 
@@ -73,74 +67,154 @@ function eliminarFuente(index) {
     mostrarMensaje(`🗑️ Fuente "${nombre}" eliminada`);
 }
 
-// Obtener RSS
+// Extraer noticias de un RSS (con timeout y múltiples estrategias)
 async function fetchRSS(rssUrl, nombreFuente) {
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
     try {
-        const response = await fetch(proxyUrl);
+        const response = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await response.json();
         const xmlText = data.contents;
         
+        if (!xmlText || xmlText.length < 100) return [];
+        
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        const items = xmlDoc.querySelectorAll('item');
+        
+        if (xmlDoc.querySelector('parsererror')) return [];
+        
+        // Múltiples estrategias para encontrar items
+        let items = xmlDoc.querySelectorAll('item');
+        if (items.length === 0) items = xmlDoc.querySelectorAll('entry');
+        if (items.length === 0) {
+            const links = xmlDoc.querySelectorAll('link');
+            items = Array.from(links).filter(l => {
+                const title = l.getAttribute('title') || l.textContent;
+                return title && title.length > 10;
+            });
+        }
+        
+        if (items.length === 0) return [];
+        
         const noticiasFuente = [];
+        // 🔥 CAMBIADO: 25 noticias por fuente (antes 10)
+        const maxItems = Math.min(items.length, 25);
         
-        items.forEach((item, idx) => {
-            const title = item.querySelector('title')?.textContent || '';
-            const link = item.querySelector('link')?.textContent || '';
-            let description = item.querySelector('description')?.textContent || '';
-            const pubDate = item.querySelector('pubDate')?.textContent || '';
+        for (let idx = 0; idx < maxItems; idx++) {
+            const item = items[idx];
             
-            description = description.replace(/<[^>]*>/g, '').trim();
+            // Extraer título
+            let title = '';
+            const titleElem = item.querySelector('title, titulo, headline');
+            if (titleElem) title = titleElem.textContent || titleElem.getAttribute('title');
+            if (!title && item.textContent) title = item.textContent.slice(0, 100);
+            title = (title || '').trim();
+            if (title.length < 8) continue;
             
-            let imageUrl = '';
-            const mediaContent = item.querySelector('media\\:content, content');
-            if (mediaContent) imageUrl = mediaContent.getAttribute('url');
-            
-            const enclosure = item.querySelector('enclosure');
-            if (enclosure && !imageUrl) imageUrl = enclosure.getAttribute('url');
-            
-            if (title && link && title.length > 5) {
-                noticiasFuente.push({
-                    id: `${link}_${idx}`,
-                    titulo: title.trim(),
-                    enlace: link,
-                    descripcion: description.slice(0, 180),
-                    imagen: imageUrl || `https://placehold.co/600x400/1e1e1e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
-                    fuente: nombreFuente,
-                    fecha: pubDate,
-                    timestamp: new Date(pubDate || Date.now()).getTime()
-                });
+            // Extraer enlace
+            let link = '';
+            const linkElem = item.querySelector('link');
+            if (linkElem) link = linkElem.textContent || linkElem.getAttribute('href');
+            if (!link) {
+                const guid = item.querySelector('guid');
+                if (guid) link = guid.textContent;
             }
-        });
+            if (!link) link = item.getAttribute('url') || item.getAttribute('href');
+            
+            if (link && link.startsWith('/')) {
+                try {
+                    const baseUrl = new URL(rssUrl);
+                    link = baseUrl.origin + link;
+                } catch(e) {}
+            }
+            
+            if (!link || link.length < 5) continue;
+            
+            // Extraer descripción
+            let description = '';
+            const descElem = item.querySelector('description, summary, content');
+            if (descElem) description = descElem.textContent || '';
+            description = description.replace(/<[^>]*>/g, '').trim().slice(0, 160);
+            
+            // Extraer fecha
+            let pubDate = '';
+            const dateElem = item.querySelector('pubDate, published, updated');
+            if (dateElem) pubDate = dateElem.textContent;
+            
+            // Extraer imagen
+            let imageUrl = '';
+            const media = item.querySelector('media\\:content, content, enclosure');
+            if (media) imageUrl = media.getAttribute('url') || media.getAttribute('src');
+            if (!imageUrl) {
+                const imgMatch = description.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i);
+                if (imgMatch) imageUrl = imgMatch[0];
+            }
+            
+            noticiasFuente.push({
+                id: `${link}_${idx}`,
+                titulo: title.slice(0, 100),
+                enlace: link,
+                descripcion: description || title.slice(0, 100),
+                imagen: imageUrl || `https://placehold.co/600x400/1e1e1e/667eea?text=${encodeURIComponent(nombreFuente.slice(0, 2))}`,
+                fuente: nombreFuente,
+                fecha: pubDate,
+                timestamp: new Date(pubDate || Date.now()).getTime()
+            });
+        }
         
+        console.log(`✅ ${nombreFuente}: ${noticiasFuente.length} noticias`);
         return noticiasFuente;
+        
     } catch (error) {
-        console.error(error);
+        clearTimeout(timeoutId);
+        console.warn(`❌ ${nombreFuente}: ${error.message}`);
         return [];
     }
 }
 
-// Actualizar todas las fuentes
+// ACTUALIZAR EN PARALELO (RÁPIDO)
 async function actualizarTodo() {
     if (fuentes.length === 0) {
         mostrarMensaje('📌 Primero añade alguna fuente RSS', true);
         return;
     }
     
-    const container = document.getElementById('newsContainer');
-    container.innerHTML = '<div class="loading-state">🔄 Cargando noticias...</div>';
-    
-    let todasLasNoticias = [];
-    
-    for (const fuente of fuentes) {
-        const noticiasFuente = await fetchRSS(fuente.rss, fuente.nombre);
-        todasLasNoticias.push(...noticiasFuente);
-        await new Promise(r => setTimeout(r, 400));
+    if (actualizando) {
+        mostrarMensaje('⏳ Ya está actualizando...', true);
+        return;
     }
     
-    // Eliminar duplicados por enlace
+    actualizando = true;
+    const container = document.getElementById('newsContainer');
+    container.innerHTML = '<div class="loading-state">🔄 Cargando ' + fuentes.length + ' fuentes en paralelo...</div>';
+    
+    // Carga paralela (todas las fuentes a la vez)
+    const promesas = fuentes.map(fuente => fetchRSS(fuente.rss, fuente.nombre));
+    const resultados = await Promise.all(promesas);
+    
+    // Combinar resultados
+    let todasLasNoticias = [];
+    const fuentesConNoticias = [];
+    
+    for (let i = 0; i < resultados.length; i++) {
+        if (resultados[i].length > 0) {
+            todasLasNoticias.push(...resultados[i]);
+            fuentesConNoticias.push(fuentes[i].nombre);
+        }
+    }
+    
+    // Diagnóstico: mostrar fuentes que fallaron
+    const fuentesFallidas = fuentes.filter(f => !fuentesConNoticias.includes(f.nombre));
+    if (fuentesFallidas.length > 0) {
+        const nombres = fuentesFallidas.map(f => f.nombre).join(', ');
+        mostrarMensaje(`⚠️ Sin noticias: ${nombres}`, true);
+    }
+    
+    // Eliminar duplicados
     const noticiasUnicas = [];
     const enlacesVistos = new Set();
     for (const noticia of todasLasNoticias) {
@@ -150,14 +224,15 @@ async function actualizarTodo() {
         }
     }
     
-    // ORDENAR: de más nueva a más antigua (las últimas primero)
+    // Ordenar: más nuevas primero
     noticiasUnicas.sort((a, b) => b.timestamp - a.timestamp);
     
     noticias = noticiasUnicas;
     guardarNoticias();
     renderizarNoticias();
     
-    mostrarMensaje(`✨ ${noticias.length} noticias cargadas`);
+    actualizando = false;
+    mostrarMensaje(`✨ ${noticias.length} noticias de ${fuentesConNoticias.length}/${fuentes.length} fuentes`);
 }
 
 function renderizarNoticias() {
@@ -171,10 +246,12 @@ function renderizarNoticias() {
     const noLeidas = noticias.filter(n => !leidas.has(n.id)).length;
     document.title = noLeidas > 0 ? `(${noLeidas}) anduimRSS` : 'anduimRSS';
     
+    const noticiasMostradas = noticias.slice(0, 50);
+    
     container.innerHTML = `
         <div class="news-stats">📊 ${noticias.length} noticias · ✨ ${noLeidas} sin leer</div>
         <div class="news-grid">
-            ${noticias.map(noticia => `
+            ${noticiasMostradas.map(noticia => `
                 <div class="news-card ${leidas.has(noticia.id) ? 'read' : ''}" data-url="${noticia.enlace}" data-id="${noticia.id}">
                     <img class="news-image" src="${noticia.imagen}" alt="${escapeHtml(noticia.titulo)}" onerror="this.src='https://placehold.co/130x130/1e1e1e/667eea?text=📰'">
                     <div class="news-content">
@@ -184,12 +261,13 @@ function renderizarNoticias() {
                         </div>
                         <div class="news-meta">
                             <span class="news-source">📌 ${escapeHtml(noticia.fuente)}</span>
-                            <span class="news-date">${formatearFecha(noticia.fecha)}</span>
+                            <span class="news-date">${formatearFechaHora(noticia.fecha)}</span>
                         </div>
                     </div>
                 </div>
             `).join('')}
         </div>
+        ${noticias.length > 50 ? `<div style="text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 12px;">📌 Mostrando las 50 más recientes de ${noticias.length}</div>` : ''}
     `;
     
     document.querySelectorAll('.news-card').forEach(card => {
@@ -203,7 +281,6 @@ function renderizarNoticias() {
                 card.classList.add('read');
                 renderizarNoticias();
             }
-            
             window.open(url, '_blank');
         });
     });
@@ -228,13 +305,12 @@ function limpiarLeidos() {
     mostrarMensaje(`🗑️ ${leidasCount} noticias leídas eliminadas`);
 }
 
-// Exportar fuentes
+// Exportar/Importar
 function exportarFuentes() {
     if (fuentes.length === 0) {
         mostrarMensaje('No hay fuentes para exportar', true);
         return;
     }
-    
     const data = JSON.stringify(fuentes, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -246,15 +322,12 @@ function exportarFuentes() {
     mostrarMensaje('✅ Fuentes exportadas');
 }
 
-// Importar fuentes
 function importarFuentes() {
     const input = document.getElementById('importFile');
     input.click();
-    
     input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
@@ -275,17 +348,28 @@ function importarFuentes() {
     };
 }
 
-function formatearFecha(fechaStr) {
-    if (!fechaStr) return 'Fecha desconocida';
+// 🔥 NUEVA FUNCIÓN: Fecha y hora juntas
+function formatearFechaHora(fechaStr) {
+    if (!fechaStr) return 'Fecha?';
     try {
         const fecha = new Date(fechaStr);
+        if (isNaN(fecha.getTime())) return 'Fecha?';
+        
         const ahora = new Date();
         const diff = ahora - fecha;
+        const minutos = Math.floor(diff / 60000);
         const horas = Math.floor(diff / 3600000);
+        const dias = Math.floor(diff / 86400000);
         
-        if (horas < 1) return 'Ahora mismo';
-        if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
-        return fecha.toLocaleDateString('es-ES');
+        // Formato de hora: HH:MM
+        const horaStr = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        
+        if (minutos < 1) return `Ahora (${horaStr})`;
+        if (minutos < 60) return `Hace ${minutos}m (${horaStr})`;
+        if (horas < 24) return `Hace ${horas}h (${horaStr})`;
+        if (dias < 7) return `${fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} ${horaStr}`;
+        
+        return fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + ` ${horaStr}`;
     } catch {
         return fechaStr;
     }
@@ -299,21 +383,21 @@ function mostrarMensaje(mensaje, esError = false) {
         bottom: 20px;
         right: 20px;
         left: 20px;
-        max-width: 300px;
+        max-width: 350px;
         margin: 0 auto;
         background: ${esError ? '#f56565' : '#48bb78'};
         color: white;
-        padding: 12px 20px;
+        padding: 10px 16px;
         border-radius: 12px;
         text-align: center;
         z-index: 1000;
-        animation: fadeInOut 2.5s ease;
-        font-size: 14px;
+        animation: fadeInOut 3s ease;
+        font-size: 13px;
         font-weight: 500;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     `;
     document.body.appendChild(msgDiv);
-    setTimeout(() => msgDiv.remove(), 2500);
+    setTimeout(() => msgDiv.remove(), 3000);
 }
 
 function escapeHtml(str) {
@@ -323,7 +407,7 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// Añadir animación CSS
+// Animación
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInOut {
