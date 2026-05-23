@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Agregador de Noticias Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 Agregador de Noticias</h1>
+            <p>Añade páginas web como fuentes y lee sus novedades</p>
+        </header>
+
+        <div class="add-source">
+            <input type="url" id="newSourceUrl" placeholder="https://ejemplo.com/noticias" required>
+            <input type="text" id="newSourceName" placeholder="Nombre de la fuente (ej: El Ejemplo)">
+            <button id="addSourceBtn">➕ Añadir fuente</button>
+        </div>
+
+        <div class="sources-panel">
+            <h2>📌 Tus fuentes</h2>
+            <div id="sourcesList" class="sources-list"></div>
+            <div class="actions">
+                <button id="fetchAllBtn" class="btn-primary">🔄 Actualizar todas</button>
+                <button id="markAllReadBtn" class="btn-secondary">✅ Marcar todo como leído</button>
+                <button id="clearReadBtn" class="btn-secondary">🗑️ Limpiar noticias leídas</button>
+            </div>
+        </div>
+
+        <div class="news-container">
+            <h2>📬 Últimas noticias</h2>
+            <div id="newsList" class="news-grid">
+                <div class="loading">Cargando noticias... Haz clic en "Actualizar todas"</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
