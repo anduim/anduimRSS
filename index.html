@@ -2,53 +2,594 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>anduimRSS - Lector de noticias</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>anduimRSS - Lector de Noticias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f6fa;
+            padding: 16px;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #1a2a3a;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #5a6874;
+            margin-bottom: 24px;
+        }
+
+        /* Formulario */
+        .add-form {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .add-form input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccd7e6;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .add-form button {
+            width: 100%;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .add-form button:active {
+            background: #2563eb;
+            transform: scale(0.98);
+        }
+
+        /* Panel de fuentes */
+        .sources-panel {
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .sources-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .source-tag {
+            background: #eef2ff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .remove-source {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* Grid de noticias */
+        .news-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        @media (min-width: 640px) {
+            .news-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .news-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .news-card:active {
+            transform: scale(0.98);
+        }
+
+        .news-card.read {
+            opacity: 0.6;
+            background: #e9ecef;
+        }
+
+        .news-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .news-content {
+            padding: 12px;
+        }
+
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0f172a;
+            font-size: 16px;
+        }
+
+        .news-summary {
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .news-source {
+            font-size: 11px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .loading, .no-news {
+            text-align: center;
+            padding: 40px;
+            color: #5a6874;
+        }
+
+        hr {
+            margin: 16px 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📰 anduim<span class="gradient">RSS</span></h1>
-            <p>Tu agregador de noticias inteligente</p>
-        </header>
+        <h1>📰 anduimRSS</h1>
+        <div class="subtitle">Tu agregador de noticias inteligente</div>
 
-        <!-- Añadir fuente -->
-        <div class="card">
-            <h3>➕ Añadir nueva fuente</h3>
-            <div class="add-form">
-                <input type="text" id="sourceName" placeholder="Nombre (ej: El Mundo)" class="input">
-                <input type="url" id="sourceRss" placeholder="URL del RSS (ej: https://.../rss.xml)" class="input">
-                <button id="addBtn" class="btn btn-primary">➕ Añadir fuente</button>
-            </div>
+        <!-- Formulario para añadir fuente -->
+        <div class="add-form">
+            <input type="text" id="sourceUrl" placeholder="URL de la web (ej: https://www.elmundo.es)">
+            <input type="text" id="sourceName" placeholder="Nombre de la fuente (opcional)">
+            <button id="addBtn">➕ Añadir fuente</button>
         </div>
 
         <!-- Mis fuentes -->
-        <div class="card">
-            <h3>📌 Mis fuentes</h3>
-            <div id="sourcesList" class="sources-list"></div>
-            
-            <!-- Botones de exportar/importar -->
-            <div class="export-import">
-                <button id="exportBtn" class="btn btn-secondary">💾 Exportar fuentes</button>
-                <button id="importBtn" class="btn btn-secondary">📂 Importar fuentes</button>
-                <input type="file" id="importFile" accept=".json" style="display: none">
+        <div class="sources-panel">
+            <strong>📌 Mis fuentes</strong>
+            <div id="sourcesContainer" class="sources-list">
+                Cargando...
+            </div>
+            <div class="action-buttons">
+                <button id="fetchBtn" class="btn-primary">🔄 Actualizar todas</button>
+                <button id="markReadBtn" class="btn-secondary">✅ Marcar todo leído</button>
+                <button id="clearBtn" class="btn-secondary">🗑️ Limpiar leídos</button>
             </div>
         </div>
 
-        <!-- Acciones -->
-        <div class="actions-bar">
-            <button id="refreshBtn" class="btn btn-success">🔄 Actualizar todas</button>
-            <button id="markReadBtn" class="btn btn-secondary">✅ Marcar todo leído</button>
-            <button id="clearReadBtn" class="btn btn-secondary">🗑️ Limpiar leídos</button>
-        </div>
-
         <!-- Noticias -->
-        <div id="newsContainer" class="news-container">
-            <div class="loading-state">✨ Haz clic en "Actualizar todas" para cargar noticias</div>
+        <strong>📬 Últimas noticias</strong>
+        <div id="newsContainer" class="news-grid">
+            <div class="loading">✨ Haz clic en "Actualizar todas" o añade una fuente</div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // ============================================
+        // ANDUIM RSS - VERSIÓN FUNCIONAL 100%
+        // ============================================
+        
+        (function() {
+            console.log('🚀 App iniciada');
+            
+            // Datos
+            let fuentes = [];
+            let noticias = [];
+            let leidas = new Set();
+            
+            // Elementos DOM
+            const sourceUrlInput = document.getElementById('sourceUrl');
+            const sourceNameInput = document.getElementById('sourceName');
+            const addBtn = document.getElementById('addBtn');
+            const fetchBtn = document.getElementById('fetchBtn');
+            const markReadBtn = document.getElementById('markReadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const sourcesContainer = document.getElementById('sourcesContainer');
+            const newsContainer = document.getElementById('newsContainer');
+            
+            // Cargar datos guardados
+            function cargarDatos() {
+                try {
+                    const guardado = localStorage.getItem('anduim_datos');
+                    if (guardado) {
+                        const datos = JSON.parse(guardado);
+                        fuentes = datos.fuentes || [];
+                        noticias = datos.noticias || [];
+                        leidas = new Set(datos.leidas || []);
+                    }
+                } catch(e) {
+                    console.error('Error cargando:', e);
+                }
+                
+                if (fuentes.length === 0) {
+                    fuentes = [
+                        { url: 'https://www.elmundo.es', nombre: 'El Mundo' },
+                        { url: 'https://www.20minutos.es', nombre: '20 Minutos' }
+                    ];
+                    guardarDatos();
+                }
+                
+                if (noticias.length === 0) {
+                    cargarNoticiasEjemplo();
+                }
+                
+                actualizarUI();
+            }
+            
+            function guardarDatos() {
+                const datos = {
+                    fuentes: fuentes,
+                    noticias: noticias,
+                    leidas: [...leidas]
+                };
+                localStorage.setItem('anduim_datos', JSON.stringify(datos));
+            }
+            
+            function cargarNoticiasEjemplo() {
+                noticias = [
+                    {
+                        id: 'demo1',
+                        titulo: '🎉 Bienvenido a anduimRSS',
+                        resumen: 'Este es un lector de noticias. Añade tus fuentes favoritas y actualiza para ver noticias reales.',
+                        enlace: '#',
+                        fuente: 'Demo',
+                        imagen: '',
+                        fecha: Date.now()
+                    },
+                    {
+                        id: 'demo2',
+                        titulo: '📌 Cómo funciona',
+                        resumen: '1. Añade URLs de sitios de noticias. 2. Pulsa "Actualizar todas". 3. Las noticias aparecerán aquí.',
+                        enlace: '#',
+                        fuente: 'Demo',
+                        imagen: '',
+                        fecha: Date.now() - 3600000
+                    },
+                    {
+                        id: 'demo3',
+                        titulo: '🔍 Sitios recomendados',
+                        resumen: 'Prueba con: elpais.com, abc.es, xataka.com, microsiervos.com',
+                        enlace: '#',
+                        fuente: 'Demo',
+                        imagen: '',
+                        fecha: Date.now() - 7200000
+                    }
+                ];
+                guardarDatos();
+            }
+            
+            function actualizarUI() {
+                // Mostrar fuentes
+                if (fuentes.length === 0) {
+                    sourcesContainer.innerHTML = '<div style="color:#64748b;">No hay fuentes. Añade una arriba.</div>';
+                } else {
+                    sourcesContainer.innerHTML = fuentes.map((f, i) => `
+                        <div class="source-tag">
+                            <span>📄 ${escapeHtml(f.nombre)}</span>
+                            <button class="remove-source" data-index="${i}">✖</button>
+                        </div>
+                    `).join('');
+                    
+                    // Eventos eliminar
+                    document.querySelectorAll('.remove-source').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const idx = parseInt(btn.dataset.index);
+                            if (confirm(`¿Eliminar "${fuentes[idx].nombre}"?`)) {
+                                fuentes.splice(idx, 1);
+                                guardarDatos();
+                                actualizarUI();
+                            }
+                        });
+                    });
+                }
+                
+                // Mostrar noticias
+                if (noticias.length === 0) {
+                    newsContainer.innerHTML = '<div class="no-news">📭 Sin noticias. Pulsa "Actualizar todas".</div>';
+                    return;
+                }
+                
+                newsContainer.innerHTML = noticias.map(n => `
+                    <div class="news-card ${leidas.has(n.id) ? 'read' : ''}" data-id="${n.id}" data-link="${n.enlace}">
+                        <div class="news-img">
+                            ${n.imagen ? `<img src="${n.imagen}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML='📰'">` : '📰'}
+                        </div>
+                        <div class="news-content">
+                            <div class="news-title">${escapeHtml(n.titulo)}</div>
+                            <div class="news-summary">${escapeHtml(n.resumen)}</div>
+                            <div class="news-source">📌 ${escapeHtml(n.fuente)}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Eventos clic en noticias
+                document.querySelectorAll('.news-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const id = card.dataset.id;
+                        const link = card.dataset.link;
+                        
+                        if (link && link !== '#') {
+                            if (!leidas.has(id)) {
+                                leidas.add(id);
+                                guardarDatos();
+                                card.classList.add('read');
+                            }
+                            window.open(link, '_blank');
+                        } else if (link === '#') {
+                            alert('ℹ️ Esta es una noticia de demostración. Añade fuentes reales y actualiza.');
+                        }
+                    });
+                });
+            }
+            
+            // Añadir fuente
+            function anadirFuente() {
+                let url = sourceUrlInput.value.trim();
+                let nombre = sourceNameInput.value.trim();
+                
+                if (!url) {
+                    alert('❌ Introduce una URL');
+                    return;
+                }
+                
+                // Añadir https si falta
+                if (!url.startsWith('http')) {
+                    url = 'https://' + url;
+                }
+                
+                // Validar URL
+                try {
+                    new URL(url);
+                } catch(e) {
+                    alert('❌ URL no válida. Ejemplo: https://www.ejemplo.com');
+                    return;
+                }
+                
+                // Si no hay nombre, usar el dominio
+                if (!nombre) {
+                    try {
+                        nombre = new URL(url).hostname.replace('www.', '');
+                    } catch(e) {
+                        nombre = 'Mi fuente';
+                    }
+                }
+                
+                fuentes.push({ url, nombre });
+                guardarDatos();
+                
+                sourceUrlInput.value = '';
+                sourceNameInput.value = '';
+                
+                actualizarUI();
+                alert(`✅ Fuente "${nombre}" añadida`);
+            }
+            
+            // Actualizar noticias
+            async function actualizarNoticias() {
+                if (fuentes.length === 0) {
+                    alert('⚠️ No hay fuentes. Añade alguna primero.');
+                    return;
+                }
+                
+                newsContainer.innerHTML = '<div class="loading">🔄 Cargando noticias...<br><small>Esto puede tardar unos segundos</small></div>';
+                
+                let todasLasNoticias = [];
+                
+                for (const fuente of fuentes) {
+                    try {
+                        console.log(`Buscando en ${fuente.nombre}...`);
+                        const noticiasFuente = await extraerNoticias(fuente.url, fuente.nombre);
+                        todasLasNoticias.push(...noticiasFuente);
+                        await delay(300);
+                    } catch(e) {
+                        console.error(`Error con ${fuente.nombre}:`, e);
+                    }
+                }
+                
+                if (todasLasNoticias.length > 0) {
+                    // Eliminar duplicados
+                    const unicas = [];
+                    const linksVistos = new Set();
+                    for (const n of todasLasNoticias) {
+                        if (!linksVistos.has(n.enlace)) {
+                            linksVistos.add(n.enlace);
+                            unicas.push(n);
+                        }
+                    }
+                    noticias = unicas.slice(0, 30);
+                    guardarDatos();
+                    actualizarUI();
+                } else {
+                    if (noticias.length === 0) {
+                        cargarNoticiasEjemplo();
+                        actualizarUI();
+                    }
+                    alert('⚠️ No se encontraron noticias. Las webs pueden no permitir extracción. Siguen las noticias de ejemplo.');
+                }
+            }
+            
+            async function extraerNoticias(url, nombreFuente) {
+                const proxies = [
+                    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                    `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+                ];
+                
+                let html = null;
+                for (const proxy of proxies) {
+                    try {
+                        const res = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+                        if (res.ok) {
+                            const data = await res.json();
+                            html = data.contents || data;
+                            if (html && html.length > 500) break;
+                        }
+                    } catch(e) {}
+                }
+                
+                if (!html) return [];
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const noticias = [];
+                const enlaces = doc.querySelectorAll('a[href]');
+                
+                for (const enlace of enlaces) {
+                    if (noticias.length >= 10) break;
+                    
+                    const href = enlace.href;
+                    const texto = enlace.innerText.trim();
+                    
+                    if (!href || href.includes('#') || href === url) continue;
+                    if (texto.length < 20 || texto.length > 150) continue;
+                    
+                    // Buscar imagen
+                    let imagen = '';
+                    const padre = enlace.closest('article, div, li');
+                    if (padre) {
+                        const img = padre.querySelector('img');
+                        if (img && img.src) imagen = img.src;
+                    }
+                    
+                    noticias.push({
+                        id: `${nombreFuente}-${href}-${Date.now()}`,
+                        titulo: texto.slice(0, 90),
+                        resumen: texto.slice(0, 140),
+                        enlace: href,
+                        fuente: nombreFuente,
+                        imagen: imagen,
+                        fecha: Date.now()
+                    });
+                }
+                
+                return noticias;
+            }
+            
+            function marcarTodoLeido() {
+                noticias.forEach(n => leidas.add(n.id));
+                guardarDatos();
+                actualizarUI();
+            }
+            
+            function limpiarLeidos() {
+                noticias = noticias.filter(n => !leidas.has(n.id));
+                leidas.clear();
+                guardarDatos();
+                actualizarUI();
+            }
+            
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+            
+            // Configurar eventos
+            if (addBtn) addBtn.onclick = anadirFuente;
+            if (fetchBtn) fetchBtn.onclick = actualizarNoticias;
+            if (markReadBtn) markReadBtn.onclick = marcarTodoLeido;
+            if (clearBtn) clearBtn.onclick = limpiarLeidos;
+            
+            // Iniciar
+            cargarDatos();
+            
+            console.log('✅ Eventos configurados');
+        })();
+    </script>
 </body>
 </html>
