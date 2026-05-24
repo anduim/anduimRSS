@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>anduimRSS - Agregador de Noticias</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 anduimRSS</h1>
+            <p>Agregador de noticias - Añade tus fuentes favoritas</p>
+        </header>
+
+        <div class="add-source">
+            <input type="url" id="newSourceUrl" placeholder="https://ejemplo.com" required>
+            <input type="text" id="newSourceName" placeholder="Nombre de la fuente (opcional)">
+            <button id="addSourceBtn">➕ Añadir fuente</button>
+        </div>
+
+        <div class="sources-panel">
+            <h2>📌 Tus fuentes</h2>
+            <div id="sourcesList" class="sources-list"></div>
+            <div class="actions">
+                <button id="fetchAllBtn" class="btn-primary">🔄 Actualizar todas</button>
+                <button id="markAllReadBtn" class="btn-secondary">✅ Marcar todo como leído</button>
+                <button id="clearReadBtn" class="btn-secondary">🗑️ Limpiar noticias leídas</button>
+            </div>
+        </div>
+
+        <div class="news-container">
+            <h2>📬 Últimas noticias</h2>
+            <div id="newsList" class="news-grid"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
